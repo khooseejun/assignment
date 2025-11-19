@@ -1,54 +1,13 @@
 from tkinter import *
+from tkinter import messagebox
 
 window = Tk()
 window.title("Python Tkinter Windows")
 window.geometry("1080x920")
 window.resizable(False,False)
-window.config(background="#0C090A")
+window.config(background="#1EFF00")
 
-on_or_off = IntVar()
-radiostatus = IntVar()
 option = ["Main", "Sub", "Settings"]
-
-def click():
-    print("Button Clicked")
-
-def submit():
-    thetext = entry.get()
-    print(thetext)
-    entry.config(state=DISABLED)
-
-def delete():
-    entry.delete(0,END)
-    print("Text deleted")
-
-def backspace():
-    entry.delete(len(entry.get())-1,END)
-    print("Delete one symbol")
-
-def buttonstatus():
-    if (on_or_off.get() == 1):
-        print("Agree")
-    else:
-        print("Disagree :(")
-
-def whichoption():
-    whichoption_value = radiostatus.get()
-    match radiostatus.get():
-        case 0:
-            print("Radiobutton first option")
-        case 1:
-            print("Radiobutton second option")
-        case 2:
-            print("Radiobutton third option")
-        case _:
-            print("Buggggg")
-
-def scalevalue():
-    print(scale.get())
-
-def listvalue():
-    print(listbox.get(listbox.curselection()))
 
 # Label
 label = Label(
@@ -62,10 +21,13 @@ label = Label(
 label.pack()
 
 # Button
+def buttonclick():
+    print("Button Clicked")
+
 button = Button(
     window,
     text="Click Me",
-    command=click,
+    command=buttonclick,
     fg="green",
     bg="blue",
     activebackground="white"
@@ -73,6 +35,19 @@ button = Button(
 button.pack()
 
 # Entry
+def submit():
+    thetext = entry.get()
+    print(thetext)
+    entry.config(state=DISABLED)
+
+def delete():
+    entry.delete(0,END)
+    print("Text deleted")
+
+def backspace():
+    entry.delete(len(entry.get())-1,END)
+    print("Delete one symbol")
+
 entry = Entry(
     window,
     font=("Arial",24),
@@ -105,6 +80,14 @@ backspace_button=Button(
 backspace_button.pack(side=RIGHT)
 
 # Check Button
+on_or_off = IntVar()
+
+def buttonstatus():
+    if (on_or_off.get() == 1):
+        print("Agree")
+    else:
+        print("Disagree :(")
+
 thecheckbutton = Checkbutton(
     window,
     text="I agree the terms and condition.",
@@ -116,6 +99,19 @@ thecheckbutton = Checkbutton(
 thecheckbutton.pack()
 
 # Radio Button ( same as check button, but only 1 active )
+radiostatus = IntVar()
+def whichoption():
+    whichoption_value = radiostatus.get()
+    match radiostatus.get():
+        case 0:
+            print("Radiobutton first option")
+        case 1:
+            print("Radiobutton second option")
+        case 2:
+            print("Radiobutton third option")
+        case _:
+            print("Buggggg")
+
 for i in range(len(option)):
     radiobutton = Radiobutton(
         window,
@@ -126,6 +122,10 @@ for i in range(len(option)):
         command=whichoption
     )
     radiobutton.pack(anchor=W)
+
+# Scale
+def scalevalue():
+    print(scale.get())
 
 scale = Scale(
     window,
@@ -148,6 +148,10 @@ button2 = Button(
     )
 button2.pack()
 
+# List box
+def listvalue():
+    print(listbox.get(listbox.curselection()))
+
 listbox=Listbox(
     window,
     bg="#f7ffde"
@@ -162,5 +166,29 @@ listsubmit = Button(
     command=listvalue
     )
 listsubmit.pack()
+
+# Message Box
+def popbox():
+    messagebox.showinfo(
+        title="Bugggggg",
+        message="Heheheheh"
+    )
+    # messagebox.showwarning()
+    # messagebox.askokcancel()
+    if messagebox.askyesno(
+        title="Yes or no",
+        message="Yes or No :)"
+    ):
+        print("Press Yes")
+    else:
+        print("Press No")
+
+
+button3 = Button(
+    window,
+    text="Pop Up",
+    command=popbox
+)
+button3.pack()
 
 window.mainloop()
