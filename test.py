@@ -7,6 +7,7 @@ window.resizable(False,False)
 window.config(background="#0C090A")
 
 on_or_off = IntVar()
+radiostatus = IntVar()
 option = ["Main", "Sub", "Settings"]
 
 def click():
@@ -30,6 +31,24 @@ def buttonstatus():
         print("Agree")
     else:
         print("Disagree :(")
+
+def whichoption():
+    whichoption_value = radiostatus.get()
+    match radiostatus.get():
+        case 0:
+            print("Radiobutton first option")
+        case 1:
+            print("Radiobutton second option")
+        case 2:
+            print("Radiobutton third option")
+        case _:
+            print("Buggggg")
+
+def scalevalue():
+    print(scale.get())
+
+def listvalue():
+    print(listbox.get(listbox.curselection()))
 
 # Label
 label = Label(
@@ -101,8 +120,47 @@ for i in range(len(option)):
     radiobutton = Radiobutton(
         window,
         text=option[i],
+        variable=radiostatus,
+        value=i,
+        indicatoron=0,
+        command=whichoption
     )
-    radiobutton.pack()
+    radiobutton.pack(anchor=W)
 
+scale = Scale(
+    window,
+    from_=100,
+    to=0,
+    length=300,
+    orient=VERTICAL,
+    tickinterval=10,
+    showvalue=0,
+    troughcolor="#69EAFF",
+    fg="blue",
+    bg="green"
+    )
+scale.set(67)
+scale.pack()
+button2 = Button(
+    window,
+    text="Scale Value",
+    command=scalevalue
+    )
+button2.pack()
+
+listbox=Listbox(
+    window,
+    bg="#f7ffde"
+    )
+listbox.pack()
+listbox.insert(1,option[0])
+listbox.insert(2,option[1])
+listbox.insert(3,option[2])
+listsubmit = Button(
+    window,
+    text="List",
+    command=listvalue
+    )
+listsubmit.pack()
 
 window.mainloop()
