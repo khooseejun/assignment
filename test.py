@@ -1,38 +1,42 @@
 from tkinter import *
 from tkinter import messagebox
+from tkinter import filedialog
 
 window = Tk()
 window.title("Python Tkinter Windows")
-window.geometry("1080x920")
+window.geometry("1366x1024")
 window.resizable(False,False)
-window.config(background="#1EFF00")
+window.config(background="light blue")
 
 option = ["Main", "Sub", "Settings"]
 
+frame = Frame(window)
+frame.place(x=0, y=0)
+
 # Label
 label = Label(
-    window,text="Hello, World!",
+    frame,text="Hello, World!",
     font=("Arial",24,"bold"),
     fg="green",
     bg="blue",
     padx=10,
     pady=10
 )
-label.pack()
+label.pack(side=LEFT)
 
 # Button
 def buttonclick():
     print("Button Clicked")
 
 button = Button(
-    window,
+    frame,
     text="Click Me",
     command=buttonclick,
     fg="green",
     bg="blue",
     activebackground="white"
 )
-button.pack()
+button.pack(side=BOTTOM)
 
 # Entry
 def submit():
@@ -96,7 +100,7 @@ thecheckbutton = Checkbutton(
     offvalue=0,
     command=buttonstatus
 )
-thecheckbutton.pack()
+thecheckbutton.pack(side=BOTTOM)
 
 # Radio Button ( same as check button, but only 1 active )
 radiostatus = IntVar()
@@ -140,13 +144,13 @@ scale = Scale(
     bg="green"
     )
 scale.set(67)
-scale.pack()
+scale.place(x=1300,y=0)
 button2 = Button(
     window,
     text="Scale Value",
     command=scalevalue
     )
-button2.pack()
+button2.pack(side=RIGHT)
 
 # List box
 def listvalue():
@@ -174,7 +178,6 @@ def popbox():
         message="Heheheheh"
     )
     # messagebox.showwarning()
-    # messagebox.askokcancel()
     if messagebox.askyesno(
         title="Yes or no",
         message="Yes or No :)"
@@ -182,7 +185,11 @@ def popbox():
         print("Press Yes")
     else:
         print("Press No")
-
+    # messagebox.askokcancel()
+    # messagebox.askokcancel()
+    # messagebox.askquestion()
+    # messagebox.askretrycancel()
+    # messagebox.askyesnocancel()
 
 button3 = Button(
     window,
@@ -190,5 +197,50 @@ button3 = Button(
     command=popbox
 )
 button3.pack()
+
+# Text ( can input)
+def submit2():
+    input = text.get(1.0,END)
+    print(input)
+
+v1 = StringVar()
+text = Text(
+    window,
+    bg="light yellow"
+)
+text.pack()
+button4 = Button(
+    window,
+    text="Text submit",
+    command=submit2
+)
+button4.pack()
+
+# Tkinter filedialog
+# def openfile():
+#     filepath = filedialog.askopenfilename()
+#     """
+#     In Windows:
+#         filedialog.askopenfilename(
+#             initialdir="C:\\Users\\username\\",
+#             title="Open a File",
+#             filetypes=(
+#             ("text files",".txt"),
+#             ("all files,".*")
+#             )
+#         )
+
+#     """
+#     file = open(filepath)
+#     print(file.read())
+#     file.close()
+
+# def savefile():
+#     file = filedialog.asksaveasfile()
+#     filetext = str(text.get(1.0,END))
+#     file.write(v1)
+#     file.close()
+
+# savefile()
 
 window.mainloop()
