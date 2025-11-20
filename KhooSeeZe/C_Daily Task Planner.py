@@ -19,25 +19,25 @@ class MainMenu(Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        home_frame = HomePage(parent=container, pages=self)
-        self.frames["HomePage"] = home_frame
-        home_frame.grid(row=0, column=0, sticky="nsew")
+        # home_frame = HomePage(parent=container, pages=self)
+        # self.frames["HomePage"] = home_frame
+        # home_frame.grid(row=0, column=0, sticky="nsew")
 
-        goal_frame = GoalPage(parent=container, pages=self)
-        self.frames["GoalPage"] = goal_frame
-        goal_frame.grid(row=0, column=0, sticky="nsew")
+        # goal_frame = GoalPage(parent=container, pages=self)
+        # self.frames["GoalPage"] = goal_frame
+        # goal_frame.grid(row=0, column=0, sticky="nsew")
 
-        skills_frame = SkillsLogPage(parent=container, pages=self)
-        self.frames["SkillsLogPage"] = skills_frame
-        skills_frame.grid(row=0, column=0, sticky="nsew")
+        # skills_frame = SkillsLogPage(parent=container, pages=self)
+        # self.frames["SkillsLogPage"] = skills_frame
+        # skills_frame.grid(row=0, column=0, sticky="nsew")
 
-        planner_frame = PlannerPage(parent=container, pages=self)
-        self.frames["PlannerPage"] = planner_frame
-        planner_frame.grid(row=0, column=0, sticky="nsew")
+        # planner_frame = PlannerPage(parent=container, pages=self)
+        # self.frames["PlannerPage"] = planner_frame
+        # planner_frame.grid(row=0, column=0, sticky="nsew")
 
-        achievement_frame = AchievementPage(parent=container, pages=self)
-        self.frames["AchievementPage"] = achievement_frame
-        achievement_frame.grid(row=0, column=0, sticky="nsew")
+        # achievement_frame = AchievementPage(parent=container, pages=self)
+        # self.frames["AchievementPage"] = achievement_frame
+        # achievement_frame.grid(row=0, column=0, sticky="nsew")
         for F in (HomePage, GoalPage, SkillsLogPage, PlannerPage, AchievementPage):
             page_name = F.__name__
             # pass self as "pages" (previously passed as controller)
