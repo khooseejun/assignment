@@ -1,8 +1,7 @@
 from tkinter import *
 
-
 class BasePage(Frame):
-    """All pages inherit from this base for convenience"""
+    """ All pages inherit from this base for convenience """
     def __init__(self, parent, pages):
         super().__init__(parent)
         # store reference to the "pages" controller (previously named controller)
@@ -12,7 +11,8 @@ class MainMenu(Tk):
     def __init__(self):
         super().__init__()
         self.title("Main menu")
-        self.geometry("900x600")
+        self.geometry("1024x768")
+        self.resizable(False,False)
         container = Frame(self)
         container.pack(fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
@@ -134,19 +134,26 @@ class SkillsLogPage(BasePage):
         skills_frame.pack(fill="both", expand=True, padx=12, pady=8)
         Label(skills_frame, text="skills_frame function write here", font=("Arial", 15, "bold")).pack(anchor="center", expand=True)
 
-class PlannerPage(BasePage):
+class PlannerPage(BasePage): # Daily Task Planner
     def __init__(self, parent, pages):
         super().__init__(parent, pages)
-        top = Frame(self)
+        top = Frame(self,bg="#FFFDFA")
         top.pack(fill="x", pady=8, padx=10)
-        Label(top, text="Daily Task Planner", font=("Arial", 20, "bold")).pack(side="left", padx=12)
+        Label(top, text="Daily Task Planner", font=("Arial", 20, "bold"),bg="#FFFDFA").pack(side="left", padx=12)
         Button(top, text="Back", command=lambda: self.pages.show_frame("HomePage"), bg="red", height=1, width=10).pack(side="right", padx=12)
 
         planner_frame = Frame(self, bd=1, relief="raised")
         planner_frame.pack(fill="both", expand=True, padx=12, pady=8)
-        Label(planner_frame, text="planner_frame function write here", font=("Arial", 15, "bold")).pack(anchor="center", expand=True)
+        taskFrame = Frame(planner_frame,bg="#FFFDFA")
+        taskFrame.pack(side=LEFT)
 
-# start you fucking coding at here
+        # Simulate get data to allTask
+        allTask = ["Programming","Full Stack", "Artifical Intelligence", "IOS Mobile Development", "Cybersecurity", "Database"]
+        checktaskvalue = [BooleanVar(value=False) for _ in allTask]
+
+        for allTask2, checktaskvalue2 in zip(allTask, checktaskvalue):
+            checktask = Checkbutton(taskFrame,text=allTask2,variable=checktaskvalue2,onvalue=1,offvalue=0).pack(anchor='w')
+
 class AchievementPage(BasePage):
     def __init__(self, parent, pages):
         super().__init__(parent, pages)
@@ -158,8 +165,6 @@ class AchievementPage(BasePage):
         achievement_frame = Frame(self, bd=1, relief="raised")
         achievement_frame.pack(fill="both", expand=True, padx=12, pady=8)
         Label(achievement_frame, text="achievement_frame function write here", font=("Arial", 15, "bold")).pack(anchor="center", expand=True)
-
-
 
 if __name__ == "__main__":
     MainMenu().mainloop()
