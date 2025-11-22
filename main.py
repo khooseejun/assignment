@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import messagebox
 
 class BasePage(Frame):
     """ All pages inherit from this base for convenience """
@@ -109,16 +110,26 @@ class GoalPage(BasePage):
         goals_body.pack(fill="both", expand=True, padx=15, pady=5)
         goals_body.pack_propagate(False)
 
-        def show_career_details():
-            career = selected_career.get()  # 取得 OptionMenu 的当前选择
+        def show_career_details(*args):
+            career = selected_career.get()  # get OptionMenu select
             info = career_details[career]
 
-            # 让 GUI 的 Label 显示内容
+            # show short term and long term task below optionbox
             output_label.config(
                 text=f"{career}\n\n"
                     f"Short-term:\n{info['short_term']}\n\n"
                     f"Long-term:\n{info['long_term']}"
             )
+        
+        def popbox():
+            career = selected_career.get()
+            if messagebox.askokcancel(title="Choose Career",message=f"Are you sure you want choose {career} ?"):
+                if career not in career_list:
+                    messagebox.showwarning(title="Choose a career",message="Choose a career, not choose a bug! :(")
+                else:
+                    messagebox.showinfo(title="Career Submit", message="Task submit")
+            else:
+                pass
             
         weltext = Frame(goals_body,bd=2, relief="raised")
         weltext.pack(fill="x")
@@ -134,9 +145,10 @@ class GoalPage(BasePage):
         ]
 
         selected_career = StringVar()
-        selected_career.set(career_list[0])
+        selected_career.set("Choose a Career")
         
         OptionMenu(goals_body, selected_career, *career_list).pack(pady=10)
+        selected_career.trace_add("write", show_career_details)
 
         next_btn = Button(goals_body, text="Next", command=show_career_details)
         next_btn.pack()
@@ -144,7 +156,7 @@ class GoalPage(BasePage):
         output_label = Label(goals_body, text="", justify=LEFT,font=("Arial", 12, "bold"),anchor="w")
         output_label.pack(padx=10, pady=20, fill="both")
 
-        submit = Button(goals_body, text="Submit", bg="blue",  width=30, height=2)
+        submit = Button(goals_body, text="Submit", bg="blue",  width=30, height=2,command=popbox)
         submit.pack(side=BOTTOM,pady=10)
 
         career_details = {

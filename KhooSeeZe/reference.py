@@ -248,7 +248,7 @@ opts = ["Option A", "Option B", "Option C"]
 vars = [BooleanVar(value=False) for _ in opts]
 
 for text, v in zip(opts, vars):
-    cb = tk.Checkbutton(root, text=text, variable=v)
+    cb = Checkbutton(window, text=text, variable=v)
     cb.pack(anchor="w")
 
 window.mainloop()
