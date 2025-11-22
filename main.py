@@ -235,7 +235,5 @@ class AchievementPage(BasePage):
         achievement_frame.pack(fill="both", expand=True, padx=12, pady=8)
         Label(achievement_frame, text="achievement_frame function write here", font=("Arial", 15, "bold")).pack(anchor="center", expand=True)
 
-
-
 if __name__ == "__main__":
     MainMenu().mainloop()
