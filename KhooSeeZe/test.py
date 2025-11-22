@@ -1,216 +1,85 @@
-from tkinter import *
+import tkinter as tk
 
-class BasePage(Frame):
-    """ All pages inherit from this base for convenience """
-    def __init__(self, parent, pages):
-        super().__init__(parent)
-        # store reference to the "pages" controller (previously named controller)
-        self.pages = pages
+class ScrollableFrame(tk.Frame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.canvas = tk.Canvas(self, highlightthickness=0)
+        self.interior = tk.Frame(self.canvas)
+        self.vsb = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.vsb.set)
 
-class MainMenu(Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("Main menu")
-        self.geometry("1024x768")
-        self.resizable(False,False)
-        container = Frame(self)
-        container.pack(fill="both", expand=True)
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_columnconfigure(0, weight=1)
+        self.vsb.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.canvas_window = self.canvas.create_window((0,0), window=self.interior, anchor="nw")
 
-        # Shared goals data structure
-        self.goals = {
-            "Full-Stack Developer": {
-                "short": ["Learn HTML/CSS basics", "Build a simple website"],
-                "long": ["Master backend + frontend", "Get a full-time job"]
-            },
-            "Machine Learning Engineer": {
-                "short": ["Learn Python NumPy & Pandas", "Complete basic ML projects"],
-                "long": ["Master Deep Learning", "Work in AI company"]
-            },
-            "Site Reliability Engineer": {
-                "short": ["Learn Linux & Bash", "Understand monitoring tools"],
-                "long": ["Master DevOps pipelines", "Join a cloud infrastructure team"]
-            },
-            "Mobile Development Specialist": {
-                "short": ["Learn basic Flutter/Swift", "Create simple app UI"],
-                "long": ["Publish app to Play Store/App Store", "Work in mobile dev team"]
-            },
-            "Cybersecurity Engineer": {
-                "short": ["Study networking basics", "Learn basic pentesting"],
-                "long": ["Get certifications (CEH, OSCP)", "Join cybersecurity team"]
-            },
-            "Data Engineer": {
-                "short": ["Learn SQL basics", "Study ETL concepts"],
-                "long": ["Master big data systems", "Work as Data Engineer"]
-            }
-        }
+        # keep scroll region updated
+        def _on_interior_config(event):
+            self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+            # update scale range when interior size changes
+            height = max(1, self.interior.winfo_height() - self.canvas.winfo_height())
+            self._scale.configure(from_=0, to=height)
+        self.interior.bind("<Configure>", _on_interior_config)
 
-        self.frames = {}
-        for F in (HomePage, GoalPage, SkillsLogPage, PlannerPage, AchievementPage):
-            page_name = F.__name__
-            # pass self as "pages" (previously passed as controller)
-            frame = F(parent=container, pages=self)
-            self.frames[page_name] = frame
-            frame.grid(row=0, column=0, sticky="nsew")
-        self.show_frame("HomePage")
+        def _on_canvas_config(event):
+            self.canvas.itemconfig(self.canvas_window, width=event.width)
+            height = max(1, self.interior.winfo_height() - self.canvas.winfo_height())
+            self._scale.configure(from_=0, to=height)
+        self.canvas.bind("<Configure>", _on_canvas_config)
 
-    def show_frame(self, page_name):
-        frame = self.frames[page_name]
-        frame.tkraise()
-        # Call an "on_show" method if present
-        if hasattr(frame, "on_show"):
-            try:
-                frame.on_show()
-            except Exception:
-                pass
+    def attach_scale(self, scale):
+        # store reference for updates
+        self._scale = scale
 
-class HomePage(BasePage):
-    def __init__(self, parent, pages):
-        super().__init__(parent, pages)
-        header = Frame(self, height=100, bg="white", bd=2, relief="solid")
-        header.pack(side="top", fill="x")
-        header.pack_propagate(False)
-        Label(header, text="LOGO", font=("Arial", 30, "bold")).pack(anchor="center", expand=True)
+    def scroll_to(self, value):
+        # value is pixel offset from top; convert to fraction for yview_moveto
+        max_scroll = max(1, self.interior.winfo_height() - self.canvas.winfo_height())
+        frac = float(value) / max_scroll
+        self.canvas.yview_moveto(frac)
 
-        move_text = Frame(self, bd=1, relief="raised")
-        move_text.pack(fill="y")
-        m_frame = Frame(move_text, bd=1, relief="raised")
-        m_frame.pack(side="left", fill="y")
-        self.m_canvas = Canvas(m_frame, width=400, height=50, bg="white", bd=1, relief="raised")
-        self.m_canvas.pack(pady=15)
-        self.m_text = self.m_canvas.create_text(
-            0, 25, text="Welcome to use our application", font=("Arial", 13), anchor="w", tags="move_text")
-        self.x = 0
-        self.scroll_m_text()
+# example usage
+root = tk.Tk()
+root.geometry("500x400")
 
-        buttons_frame = Frame(self)
-        buttons_frame.pack(padx=8)
-        btn_opts = {"width": 30, "height": 2, "bd": 4, "relief": "raised"}
-        Button(buttons_frame, text="Goal Tracker", command=lambda: self.pages.show_frame("GoalPage"), **btn_opts).pack(pady=15)
-        Button(buttons_frame, text="Skills Log", command=lambda: self.pages.show_frame("SkillsLogPage"), **btn_opts).pack(pady=15)
-        Button(buttons_frame, text="Daily Task Planner", command=lambda: self.pages.show_frame("PlannerPage"), **btn_opts).pack(pady=15)
-        Button(buttons_frame, text="Achievement Summary & Interview Tips", command=lambda: self.pages.show_frame("AchievementPage"), **btn_opts).pack(pady=15)
-        Button(buttons_frame, text="Exit", command=self.pages.quit, **btn_opts).pack(pady=15)
+container = tk.Frame(root)
+container.pack(fill="both", expand=True)
 
-    def scroll_m_text(self):
-        width = 350
-        dx = 1
-        self.m_canvas.move("move_text", dx, 0)
-        self.x += dx
-        if self.x > width:
-            self.x = 0
-            self.m_canvas.delete("move_text")
-            self.m_text = self.m_canvas.create_text(
-                self.x, 25, text="Welcome to use our application",
-                font=("Arial", 13), anchor="w", tags="move_text" )
-        self.m_canvas.after(50, self.scroll_m_text)
+scrollable = ScrollableFrame(container)
+scrollable.pack(side="left", fill="both", expand=True)
 
-class GoalPage(BasePage):
-    def __init__(self, parent, pages):
-        super().__init__(parent, pages)
-        top = Frame(self)
-        top.pack(fill="x", pady=8, padx=10)
-        Label(top, text="Goal Tracker", font=("Arial", 20, "bold")).pack(side="left", padx=12)
-        Button(top, text="Back", command=lambda: self.pages.show_frame("HomePage"), bg="red", height=1, width=10).pack(side="right", padx=12)
+# vertical scale on right side
+scale = tk.Scale(container, orient="vertical", showvalue=False, command=lambda v: scrollable.scroll_to(float(v)))
+scale.pack(side="right", fill="y")
+scrollable.attach_scale(scale)
 
-        goals_frame = Frame(self, bd=1, relief="raised")
-        goals_frame.pack(fill="both", expand=True, padx=15, pady=5)
-        goals_frame.pack_propagate(False)
+# populate with many widgets (example long text labels)
+for i in range(60):
+    tk.Label(scrollable.interior, text=f"Item {i+1}: " + "Long text " * (i % 6 + 1), anchor="w", justify="left").pack(fill="x", padx=5, pady=2)
 
-        longt_frame = Frame(goals_frame, bd=1, relief="raised", width=300)
-        longt_frame.pack(side="left", fill="y", expand=True)
-        longt_frame.pack_propagate(False)
-        Label(longt_frame, text="Long-term goals", font=("Arial", 15, "bold")).pack(side="top", pady=10)
-        for goal in ["Software development"]*5:
-            Checkbutton(longt_frame, text=goal).pack(pady=20)
+# sync mousewheel to canvas scroll (optional)
+def _on_mousewheel(event):
+    # delta on Windows/Linux; on macOS use event.delta directly
+    delta = -1 * (event.delta // 120) if event.delta else (1 if event.num == 5 else -1)
+    scrollable.canvas.yview_scroll(delta, "units")
+    # update scale position
+    bbox = scrollable.canvas.bbox("all")
+    max_scroll = max(1, scrollable.interior.winfo_height() - scrollable.canvas.winfo_height())
+    scroll_pos = scrollable.canvas.yview()[0] * max_scroll
+    scale.set(int(scroll_pos))
 
-        short_frame = Frame(goals_frame, bd=1, relief="raised", width=300)
-        short_frame.pack(side="right", fill="y", expand=True)
-        short_frame.pack_propagate(False)
-        Label(short_frame, text="Short-term goals", font=("Arial", 15, "bold")).pack(side="top", pady=10)
-        Checkbutton(short_frame, text="C++ programming").pack(pady=20)
+# Windows and Mac: bind to <MouseWheel>; Linux: <Button-4/5>
+root.bind_all("<MouseWheel>", _on_mousewheel)
+root.bind_all("<Button-4>", _on_mousewheel)
+root.bind_all("<Button-5>", _on_mousewheel)
 
-class SkillsLogPage(BasePage):
-    def __init__(self, parent, pages):
-        super().__init__(parent, pages)
-        top = Frame(self, bg="#18d8e6")
-        top.pack(fill="x", pady=8, padx=10)
-        Label(top, text="Skills Log", font=("Arial", 20, "bold")).pack(side="left", padx=12)
-        Button(top, text="Back", command=lambda: self.pages.show_frame("HomePage"), bg="red", height=1, width=10).pack(side="right", padx=12)
+# keep scale updated periodically (ensures correct range after geometry changes)
+def update_scale():
+    try:
+        height = max(1, scrollable.interior.winfo_height() - scrollable.canvas.winfo_height())
+        scale.configure(from_=0, to=height)
+        # set scale to current scroll position
+        scale.set(int(scrollable.canvas.yview()[0] * height))
+    finally:
+        root.after(100, update_scale)
 
-        skills_frame = Frame(self, bd=1, relief="raised")
-        skills_frame.pack(fill="both", expand=True, padx=12, pady=8)
-        Label(skills_frame, text="skills_frame function write here", font=("Arial", 15, "bold")).pack(anchor="center", expand=True)
-
-class PlannerPage(BasePage): # Daily Task Planner
-    def __init__(self, parent, pages):
-        super().__init__(parent, pages)
-        top = Frame(self, bg="#FFFDFA")
-        top.pack(fill="x", pady=8, padx=10)
-        Label(top, text="Daily Task Planner", font=("Arial", 20, "bold"), bg="#FFFDFA").pack(side="left", padx=12)
-        Button(top, text="Back", command=lambda: self.pages.show_frame("HomePage"), bg="red", height=1, width=10).pack(side="right", padx=12)
-
-        planner_frame = Frame(self, bd=1, relief="raised", bg="#FFFDFA")
-        planner_frame.pack(fill="both", expand=True, padx=12, pady=8)
-        
-        # Task display frame with scrollbar
-        canvas = Canvas(planner_frame, bg="#FFFDFA")
-        scrollbar = Scrollbar(planner_frame, orient="vertical", command=canvas.yview)
-        scrollable_frame = Frame(canvas, bg="#FFFDFA")
-        
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-        
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
-        # Store task variables for access
-        self.task_vars = []
-        self.task_frame = scrollable_frame
-        
-    def on_show(self):
-        """Called when the page is shown - refreshes the task list"""
-        # Clear existing tasks
-        for widget in self.task_frame.winfo_children():
-            widget.destroy()
-        self.task_vars.clear()
-        
-        # Get all tasks from goals data
-        allTasks = []
-        for career, goal_types in self.pages.goals.items():
-            Label(self.task_frame, text=f"\n{career}", font=("Arial", 14, "bold"), 
-                  bg="#FFFDFA", fg="#333").pack(anchor='w', padx=10)
-            
-            for goal_type, tasks in goal_types.items():
-                Label(self.task_frame, text=f"  {goal_type.title()}-term:", 
-                      font=("Arial", 12, "italic"), bg="#FFFDFA", fg="#666").pack(anchor='w', padx=20)
-                
-                for task in tasks:
-                    task_var = BooleanVar(value=False)
-                    self.task_vars.append(task_var)
-                    Checkbutton(self.task_frame, text=f"    • {task}", 
-                              variable=task_var, onvalue=True, offvalue=False,
-                              bg="#FFFDFA", font=("Arial", 11)).pack(anchor='w', padx=30, pady=2)
-
-class AchievementPage(BasePage):
-    def __init__(self, parent, pages):
-        super().__init__(parent, pages)
-        top = Frame(self)
-        top.pack(fill="x", pady=8, padx=10)
-        Label(top, text="Achievement Summary & Interview Tips", font=("Arial", 18, "bold")).pack(side="left", padx=12)
-        Button(top, text="Back", command=lambda: self.pages.show_frame("HomePage"), bg="red", height=1, width=10).pack(side="right", padx=12)
-
-        achievement_frame = Frame(self, bd=1, relief="raised")
-        achievement_frame.pack(fill="both", expand=True, padx=12, pady=8)
-        Label(achievement_frame, text="achievement_frame function write here", font=("Arial", 15, "bold")).pack(anchor="center", expand=True)
-
-
-
-if __name__ == "__main__":
-    MainMenu().mainloop()
+root.after(100, update_scale)
+root.mainloop()
