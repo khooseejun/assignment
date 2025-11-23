@@ -82,7 +82,7 @@ class HomePage(BasePage):
         Button(buttons_frame, text="Goal Tracker", command=lambda: self.pages.show_frame("GoalPage"), **btn_opts).pack(pady=15)
         Button(buttons_frame, text="Skills Log", command=lambda: self.pages.show_frame("SkillsLogPage"), **btn_opts).pack(pady=15)
         Button(buttons_frame, text="Daily Task Planner", command=lambda: self.pages.show_frame("PlannerPage"), **btn_opts).pack(pady=15)
-        Button(buttons_frame, text="Achievement Summary & Interview Tips", command=lambda: self.pages.show_frame("AchievementPage"), **btn_opts).pack(pady=15)
+        Button(buttons_frame, text="Achievement Summary", command=lambda: self.pages.show_frame("AchievementPage"), **btn_opts).pack(pady=15)
         Button(buttons_frame, text="Exit", command=self.pages.quit, **btn_opts).pack(pady=15)
 
     def scroll_m_text(self):
@@ -120,16 +120,13 @@ class GoalPage(BasePage):
                     f"Short-term:\n{info['short_term']}\n\n"
                     f"Long-term:\n{info['long_term']}"
             )
-        
+
         def popbox():
             career = selected_career.get()
-            if messagebox.askokcancel(title="Choose Career",message=f"Are you sure you want choose {career} ?"):
-                if career not in career_list:
-                    messagebox.showwarning(title="Choose a career",message="Choose a career, not choose a bug! :(")
-                else:
-                    messagebox.showinfo(title="Career Submit", message="Task submit")
-            else:
-                pass
+            if career not in career_list:
+                messagebox.showwarning(title="Career Submit",message="Choose a career, not choose a bug! :(")
+            elif messagebox.askokcancel(title="Career Submit",message=f"Are you sure you want choose {career} ?"):
+                messagebox.showinfo(title="Career Submit", message="Task submit")
             
         weltext = Frame(goals_body,bd=2, relief="raised")
         weltext.pack(fill="x")
@@ -216,19 +213,12 @@ class PlannerPage(BasePage): # Daily Task Planner
         taskFrame = Frame(planner_frame,bg="#FFFDFA")
         taskFrame.pack(side=LEFT)
 
-        # Simulate get data to allTask
-        allTask = ["Programming","Full Stack", "Artifical Intelligence", "IOS Mobile Development", "Cybersecurity", "Database"]
-        checktaskvalue = [BooleanVar(value=False) for _ in allTask]
-
-        for allTask2, checktaskvalue2 in zip(allTask, checktaskvalue):
-            checktask = Checkbutton(taskFrame,text=allTask2,variable=checktaskvalue2,onvalue=1,offvalue=0).pack(anchor='w')
-
 class AchievementPage(BasePage):
     def __init__(self, parent, pages):
         super().__init__(parent, pages)
         top = Frame(self)
         top.pack(fill="x", pady=8, padx=10)
-        Label(top, text="Achievement Summary & Interview Tips", font=("Arial", 18, "bold")).pack(side="left", padx=12)
+        Label(top, text="Achievement Summary", font=("Arial", 18, "bold")).pack(side="left", padx=12)
         Button(top, text="Back", command=lambda: self.pages.show_frame("HomePage"), bg="red", height=1, width=10).pack(side="right", padx=12)
 
         achievement_frame = Frame(self, bd=1, relief="raised")
