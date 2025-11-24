@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import messagebox
 from pathlib import Path
-import json
+# import json >:(
 
 class BasePage(Frame):
     """ All pages inherit from this base for convenience """
@@ -59,27 +59,27 @@ class MainMenu(Tk):
             except Exception:
                 pass
     
-    def jsonfilefunc():
-        try:
-            with open("tasks.json",'r') as thejsonfile:
-                jsontest = json.load(thejsonfile)
-                thejsonfile.close()
-            print("Json file exist and valid")
-        except FileNotFoundError:
-            jsonfile_write = open("tasks.json", "x")
-            jsonfile_write.write("{}")
-            jsonfile_write.close()
-        except json.JSONDecodeError:
-            filenum=1
-            while True:
-                if Path(f"tasks{filenum}.bak").is_file():
-                    filenum += 1
-                else:
-                    Path("tasks.json").rename(Path(f"tasks{filenum}.bak"))
-                    jsonfile_write = open("tasks.json", "x")
-                    jsonfile_write.write("{}")
-                    jsonfile_write.close()
-                    break
+    # def jsonfilefunc():
+    #     try:
+    #         with open("tasks.json",'r') as thejsonfile:
+    #             jsontest = json.load(thejsonfile)
+    #             thejsonfile.close()
+    #         print("Json file exist and valid")
+    #     except FileNotFoundError:
+    #         jsonfile_write = open("tasks.json", "x")
+    #         jsonfile_write.write("{}")
+    #         jsonfile_write.close()
+    #     except json.JSONDecodeError:
+    #         filenum=1
+    #         while True:
+    #             if Path(f"tasks{filenum}.bak").is_file():
+    #                 filenum += 1
+    #             else:
+    #                 Path("tasks.json").rename(Path(f"tasks{filenum}.bak"))
+    #                 jsonfile_write = open("tasks.json", "x")
+    #                 jsonfile_write.write("{}")
+    #                 jsonfile_write.close()
+    #                 break
 
 class HomePage(BasePage):
     def __init__(self, parent, pages):
@@ -351,5 +351,5 @@ class AchievementPage(BasePage):
         Label(achievement_frame, text="achievement_frame function write here", font=("Arial", 15, "bold")).pack(anchor="center", expand=True)
 
 if __name__ == "__main__":
-    MainMenu.jsonfilefunc()
+    # MainMenu.jsonfilefunc()
     MainMenu().mainloop()

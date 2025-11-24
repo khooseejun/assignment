@@ -2,10 +2,10 @@ from tkinter import *
 from tkinter import messagebox, ttk
 from pathlib import Path
 from datetime import datetime, date, timedelta
-import json
+# import json >:(
 
 class BasePage(Frame):
-    """ All pages inherit from this base for convenience """
+    # All pages inherit from this base for convenience
     def __init__(self, parent, pages):
         super().__init__(parent)
         # store reference to the "pages" controller (previously named controller)
@@ -14,9 +14,8 @@ class BasePage(Frame):
 class MainMenu(Tk):
     def __init__(self):
         super().__init__()
-        self.title("Main menu")
+        self.title("Main Menu")
         self.geometry("1024x768")
-        self.resizable(False,False)
         container = Frame(self)
         container.pack(fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
@@ -60,27 +59,16 @@ class MainMenu(Tk):
             except Exception:
                 pass
     
-    def jsonfilefunc():
+    def txtfilefunc():
         try:
-            with open("tasks.json",'r') as thejsonfile:
-                jsontest = json.load(thejsonfile)
-                thejsonfile.close()
-            print("Json file exist and valid")
+            with open("tasks.txt",'r') as thetxtfile:
+                content = thetxtfile.read()
+                thetxtfile.close()
+            print("Text file exist and valid")
         except FileNotFoundError:
-            jsonfile_write = open("tasks.json", "x")
-            jsonfile_write.write("{}")
-            jsonfile_write.close()
-        except json.JSONDecodeError:
-            filenum=1
-            while True:
-                if Path(f"tasks{filenum}.bak").is_file():
-                    filenum += 1
-                else:
-                    Path("tasks.json").rename(Path(f"tasks{filenum}.bak"))
-                    jsonfile_write = open("tasks.json", "x")
-                    jsonfile_write.write("{}")
-                    jsonfile_write.close()
-                    break
+            txtfile_write = open("tasks.txt", "x")
+            txtfile_write.write("")
+            txtfile_write.close()
 
 class HomePage(BasePage):
     def __init__(self, parent, pages):
@@ -158,7 +146,7 @@ class GoalPage(BasePage):
                 return
             
             if messagebox.askokcancel(title="Career Submit",message=f"Are you sure you want choose {career} ?"):
-                # Save to tasks.json
+                # Save to tasks.txt
                 self.save_career_choice(career)
                 # Generate tasks for this career
                 self.generate_career_tasks(career)
@@ -284,57 +272,54 @@ class GoalPage(BasePage):
     
     def load_career_choices(self):
         try:
-            with open("tasks.json", "r") as f:
-                data = json.load(f)
-                if "career_choices" in data:
-                    self.career_choices = data["career_choices"]
-        except (FileNotFoundError, json.JSONDecodeError):
+            with open("tasks.txt", "r") as f:
+                content = f.read()
+                if content:
+                    # Parse the file to get career choices
+                    lines = content.strip().split('\n')
+                    for line in lines:
+                        if line.startswith("CAREER:"):
+                            career = line[7:].strip()
+                            if career and career not in self.career_choices:
+                                self.career_choices.append(career)
+        except FileNotFoundError:
             self.career_choices = []
     
     def save_career_choice(self, career):
         try:
-            with open("tasks.json", "r") as f:
-                data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            data = {}
-        
-        if "career_choices" not in data:
-            data["career_choices"] = []
-        
-        if career not in data["career_choices"]:
-            data["career_choices"].append(career)
-            self.career_choices.append(career)
-        
-        with open("tasks.json", "w") as f:
-            json.dump(data, f, indent=4)
+            with open("tasks.txt", "a") as f:
+                f.write(f"CAREER:{career}\n")
+                if career not in self.career_choices:
+                    self.career_choices.append(career)
+        except FileNotFoundError:
+            with open("tasks.txt", "w") as f:
+                f.write(f"CAREER:{career}\n")
+                self.career_choices.append(career)
     
     def generate_career_tasks(self, career):
-        """Generate weekly tasks for the selected career"""
-        try:
-            with open("tasks.json", "r") as f:
-                data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            data = {}
-        
-        if "daily_tasks" not in data:
-            data["daily_tasks"] = []
-        
-        # Check if tasks for this career already exist
-        existing_career_tasks = [task for task in data["daily_tasks"] 
-                               if task.get("career") == career and task.get("is_career_task")]
-        
-        if existing_career_tasks:
-            # Tasks already exist, don't duplicate
-            return
-        
+        # Generate weekly tasks for the selected career
         # Get the current highest task ID
         max_id = 0
-        if data["daily_tasks"]:
-            max_id = max(task["id"] for task in data["daily_tasks"])
+        try:
+            with open("tasks.txt", "r") as f:
+                content = f.read()
+                if content:
+                    lines = content.strip().split('\n')
+                    for line in lines:
+                        if line.startswith("TASK:"):
+                            parts = line[5:].split('|')
+                            if len(parts) >= 1:
+                                try:
+                                    task_id = int(parts[0])
+                                    if task_id > max_id:
+                                        max_id = task_id
+                                except ValueError:
+                                    pass
+        except FileNotFoundError:
+            pass
         
         # Generate tasks for the next 7 days starting from today
         today = date.today()
-        new_tasks = []
         
         for day_num in range(1, 8):
             if day_num in self.career_task[career]:
@@ -346,27 +331,11 @@ class GoalPage(BasePage):
                 # Calculate the date for this day of the week
                 task_date = today + timedelta(days=day_num - 1)
                 
-                new_task = {
-                    "id": max_id + day_num,
-                    "description": f"{title}: {description}",
-                    "date": task_date.strftime("%Y-%m-%d"),
-                    "completed": False,
-                    "career": career,
-                    "day_of_week": day_num,
-                    "is_career_task": True,
-                    "created_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                }
-                new_tasks.append(new_task)
-        
-        # Add all new tasks at once
-        data["daily_tasks"].extend(new_tasks)
-        
-        # Save to file
-        with open("tasks.json", "w") as f:
-            json.dump(data, f, indent=4)
-        
-        # Refresh the career choices list
-        self.career_choices.append(career)
+                # Format: TASK:id|description|date|completed|career|day_of_week|is_career_task|created_date
+                task_line = f"TASK:{max_id + day_num}|{title}: {description}|{task_date.strftime('%Y-%m-%d')}|False|{career}|{day_num}|True|{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                
+                with open("tasks.txt", "a") as f:
+                    f.write(task_line)
 
 class SkillsLogPage(BasePage):
     def __init__(self, parent, pages):
@@ -398,38 +367,22 @@ class PlannerPage(BasePage): # Daily Task Planner
         main_container = Frame(self)
         main_container.pack(fill="both", expand=True, padx=10, pady=5)
         
-        # Left side - Add task form
-        left_frame = Frame(main_container, bd=1, relief="raised", bg="#f0f0f0")
-        left_frame.pack(side="left", fill="both", expand=True, padx=(0, 5))
+        # REMOVED: Left side - Add task form
+        # This entire section has been removed as requested
         
-        Label(left_frame, text="Add New Task", font=("Arial", 16, "bold"), bg="#f0f0f0").pack(pady=10)
+        # Right side - Task list
+        right_frame = Frame(main_container, bd=1, relief="raised")
+        right_frame.pack(side="right", fill="both", expand=True)
         
-        # Task form
-        form_frame = Frame(left_frame, bg="#f0f0f0")
-        form_frame.pack(padx=20, pady=10, fill="x")
-        
-        # Task description
-        Label(form_frame, text="Task Description:", bg="#f0f0f0").grid(row=0, column=0, sticky="w", pady=5)
-        self.task_entry = Entry(form_frame, width=30)
-        self.task_entry.grid(row=0, column=1, pady=5, padx=10)
-        
-        # Date selection
-        Label(form_frame, text="Date:", bg="#f0f0f0").grid(row=1, column=0, sticky="w", pady=5)
-        self.date_var = StringVar()
-        self.date_var.set(date.today().strftime("%Y-%m-%d"))
-        self.date_entry = Entry(form_frame, textvariable=self.date_var, width=30)
-        self.date_entry.grid(row=1, column=1, pady=5, padx=10)
-        
-        # Add button
-        Button(form_frame, text="Add Task", command=self.add_task, bg="#4CAF50", fg="white").grid(row=2, column=0, columnspan=2, pady=10)
+        Label(right_frame, text="Task List", font=("Arial", 16, "bold")).pack(pady=10)
         
         # Filter buttons
-        filter_frame = Frame(left_frame, bg="#f0f0f0")
+        filter_frame = Frame(right_frame)
         filter_frame.pack(pady=10)
         
-        Label(filter_frame, text="Filter by Date:", bg="#f0f0f0").pack()
+        Label(filter_frame, text="Filter by Date:").pack()
         
-        date_button_frame = Frame(filter_frame, bg="#f0f0f0")
+        date_button_frame = Frame(filter_frame)
         date_button_frame.pack(pady=5)
         
         Button(date_button_frame, text="All", command=lambda: self.apply_filters("all", self.current_career_filter), width=10).pack(side="left", padx=2)
@@ -438,10 +391,10 @@ class PlannerPage(BasePage): # Daily Task Planner
         Button(date_button_frame, text="This Week", command=lambda: self.apply_filters("week", self.current_career_filter), width=10).pack(side="left", padx=2)
         
         # Career filter
-        career_frame = Frame(left_frame, bg="#f0f0f0")
+        career_frame = Frame(right_frame)
         career_frame.pack(pady=10)
         
-        Label(career_frame, text="Filter by Career:", bg="#f0f0f0").pack()
+        Label(career_frame, text="Filter by Career:").pack()
         
         self.career_filter_var = StringVar()
         self.career_filter_var.set("All Careers")
@@ -449,17 +402,11 @@ class PlannerPage(BasePage): # Daily Task Planner
         self.career_filter_menu.pack(pady=5)
         
         # Task statistics
-        stats_frame = Frame(left_frame, bg="#f0f0f0")
+        stats_frame = Frame(right_frame)
         stats_frame.pack(pady=10)
         
-        self.stats_label = Label(stats_frame, text="", bg="#f0f0f0", font=("Arial", 10))
+        self.stats_label = Label(stats_frame, text="", font=("Arial", 10))
         self.stats_label.pack()
-        
-        # Right side - Task list
-        right_frame = Frame(main_container, bd=1, relief="raised")
-        right_frame.pack(side="right", fill="both", expand=True, padx=(5, 0))
-        
-        Label(right_frame, text="Task List", font=("Arial", 16, "bold")).pack(pady=10)
         
         # Task list frame with scrollbar
         list_frame = Frame(right_frame)
@@ -481,7 +428,7 @@ class PlannerPage(BasePage): # Daily Task Planner
         Button(control_frame, text="Mark Complete", command=self.mark_complete, bg="#4CAF50", fg="white").pack(side="left", padx=5)
         Button(control_frame, text="Delete Task", command=self.delete_task, bg="#f44336", fg="white").pack(side="left", padx=5)
         
-        # Load tasks from JSON
+        # Load tasks from text file
         self.load_tasks()
     
     def on_show(self):
@@ -493,15 +440,19 @@ class PlannerPage(BasePage): # Daily Task Planner
         self.update_statistics()
     
     def load_career_choices(self):
-        """Load career choices from JSON"""
+        """Load career choices from text file"""
         try:
-            with open("tasks.json", "r") as f:
-                data = json.load(f)
-                if "career_choices" in data:
-                    self.career_choices = data["career_choices"]
-                else:
-                    self.career_choices = []
-        except (FileNotFoundError, json.JSONDecodeError):
+            with open("tasks.txt", "r") as f:
+                content = f.read()
+                if content:
+                    # Parse the file to get career choices
+                    lines = content.strip().split('\n')
+                    for line in lines:
+                        if line.startswith("CAREER:"):
+                            career = line[7:].strip()
+                            if career and career not in self.career_choices:
+                                self.career_choices.append(career)
+        except FileNotFoundError:
             self.career_choices = []
     
     def update_career_filter(self):
@@ -560,68 +511,52 @@ class PlannerPage(BasePage): # Daily Task Planner
     
     def load_tasks(self):
         try:
-            with open("tasks.json", "r") as f:
-                data = json.load(f)
-                if "daily_tasks" in data:
-                    self.tasks = data["daily_tasks"]
+            with open("tasks.txt", "r") as f:
+                content = f.read()
+                if content:
+                    lines = content.strip().split('\n')
+                    self.tasks = []
+                    for line in lines:
+                        if line.startswith("TASK:"):
+                            parts = line[5:].split('|')
+                            if len(parts) >= 8:
+                                self.tasks.append({
+                                    "id": int(parts[0]),
+                                    "description": parts[1],
+                                    "date": parts[2],
+                                    "completed": parts[3].lower() == "true",
+                                    "career": parts[4] if parts[4] != "None" else None,
+                                    "day_of_week": int(parts[5]) if parts[5] != "None" else None,
+                                    "is_career_task": parts[6].lower() == "true",
+                                    "created_date": parts[7]
+                                })
                 else:
                     self.tasks = []
-        except (FileNotFoundError, json.JSONDecodeError):
+        except FileNotFoundError:
             self.tasks = []
     
     def save_tasks(self):
+        # First, read all existing content to preserve career choices
+        career_lines = []
         try:
-            with open("tasks.json", "r") as f:
-                data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            data = {}
+            with open("tasks.txt", "r") as f:
+                content = f.read()
+                if content:
+                    lines = content.strip().split('\n')
+                    for line in lines:
+                        if line.startswith("CAREER:"):
+                            career_lines.append(line)
+        except FileNotFoundError:
+            career_lines = []
         
-        data["daily_tasks"] = self.tasks
-        
-        with open("tasks.json", "w") as f:
-            json.dump(data, f, indent=4)
-    
-    def add_task(self):
-        task_text = self.task_entry.get().strip()
-        task_date = self.date_var.get().strip()
-        
-        if not task_text:
-            messagebox.showwarning("Input Error", "Please enter a task description")
-            return
-        
-        if not task_date:
-            messagebox.showwarning("Input Error", "Please select a date")
-            return
-        
-        # Validate date format
-        try:
-            datetime.strptime(task_date, "%Y-%m-%d")
-        except ValueError:
-            messagebox.showwarning("Input Error", "Please enter a valid date in YYYY-MM-DD format")
-            return
-        
-        # Add task
-        new_task = {
-            "id": len(self.tasks) + 1 if self.tasks else 1,
-            "description": task_text,
-            "date": task_date,
-            "completed": False,
-            "career": None,
-            "day_of_week": None,
-            "is_career_task": False,
-            "created_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-        
-        self.tasks.append(new_task)
-        self.save_tasks()
-        
-        # Clear input
-        self.task_entry.delete(0, END)
-        
-        # Refresh task list with current filters
-        self.apply_filters(self.current_date_filter, self.current_career_filter)
-        
-        messagebox.showinfo("Success", "Task added successfully")
+        # Write back career choices and updated tasks
+        with open("tasks.txt", "w") as f:
+            for line in career_lines:
+                f.write(line + "\n")
+            
+            for task in self.tasks:
+                # Format: TASK:id|description|date|completed|career|day_of_week|is_career_task|created_date
+                f.write(f"TASK:{task['id']}|{task['description']}|{task['date']}|{task['completed']}|{task['career']}|{task['day_of_week']}|{task['is_career_task']}|{task['created_date']}\n")
     
     def update_task_list(self):
         self.task_listbox.delete(0, END)
@@ -694,5 +629,5 @@ class AchievementPage(BasePage):
         Label(achievement_frame, text="achievement_frame function write here", font=("Arial", 15, "bold")).pack(anchor="center", expand=True)
 
 if __name__ == "__main__":
-    MainMenu.jsonfilefunc()
+    MainMenu.txtfilefunc()
     MainMenu().mainloop()
