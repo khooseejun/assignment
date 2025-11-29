@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import messagebox
 from pathlib import Path
 import os
+from datetime import date, timedelta, datetime
 
 from A_Goal_Tracker import *
 from B_Skills_Log import *
@@ -33,6 +34,19 @@ class MainMenu(Tk):
             self.frames[page_name] = frame
             frame.grid(row=0, column=0, sticky="nsew")
         self.show_frame("HomePage")
+
+        # Initialize tasks.txt file if it doesn't exist
+        self.initialize_tasks_file()
+
+    def initialize_tasks_file(self):
+        """Create tasks.txt if it doesn't exist"""
+        try:
+            with open("tasks.txt", "r") as f:
+                content = f.read()
+        except FileNotFoundError:
+            # Create the file if it doesn't exist
+            with open("tasks.txt", "w") as f:
+                f.write("")
 
     def show_frame(self, page_name):
         frame = self.frames[page_name]
