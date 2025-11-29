@@ -1,4 +1,5 @@
 tasks.txt
 backup
 __pycache__
-reference.py
+reference
+data.txt

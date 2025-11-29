@@ -1,12 +1,12 @@
 from tkinter import *
 from tkinter import messagebox
+from pathlib import Path
+import os
 
 from A_Goal_Tracker import *
 from B_Skills_Log import *
 from C_Daily_Task_Planner import *
 from D_Achievement_Summary_Interview_Preparation_Tips import *
-
-import os
 
 class BasePage(Frame):
     """All pages inherit from this base for convenience"""
@@ -19,7 +19,7 @@ class MainMenu(Tk):
     def __init__(self):
         super().__init__()
         self.title("Main menu")
-        self.geometry("1024x768")
+        self.geometry("900x600")
         container = Frame(self)
         container.pack(fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
@@ -43,7 +43,6 @@ class MainMenu(Tk):
                 frame.on_show()
             except Exception:
                 pass
-
 
 class HomePage(BasePage):
     def __init__(self, parent, pages):
@@ -108,11 +107,10 @@ class AchievementPage(BaseAchievementPage):
     def __init__(self, parent, pages):
         super().__init__(parent, pages)
 
-        
+
 # class QAPage(BaseQAPage):
 #     def __init__(self, parent, pages):
 #         super().__init__(parent, pages)
-
 
 if __name__ == "__main__":
     MainMenu().mainloop()
