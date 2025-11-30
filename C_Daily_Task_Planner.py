@@ -92,7 +92,6 @@ class BasePlannerPage(Frame):
                 content = f.read()
                 if content:
                     lines = content.strip().split('\n')
-                    # Use a set comprehension for cleaner, duplicate-free loading
                     self.career_choices = sorted(list({line[7:].strip() for line in lines if line.startswith("CAREER:")}))
         except FileNotFoundError:
             self.career_choices = []
@@ -114,7 +113,6 @@ class BasePlannerPage(Frame):
         today, tomorrow = date.today(), date.today() + timedelta(days=1)
         week_end = today + timedelta(days=7)
         
-        # Determine date range for filtering
         date_filtered = []
         if date_filter == "all":
             date_filtered = self.tasks
@@ -125,7 +123,6 @@ class BasePlannerPage(Frame):
         elif date_filter == "week":
             date_filtered = [t for t in self.tasks if today <= datetime.strptime(t["date"], "%Y-%m-%d").date() <= week_end]
 
-        # Apply career filter on top of the date filter
         if career_filter == "All Careers":
             self.filtered_tasks = date_filtered
         else:
@@ -154,7 +151,6 @@ class BasePlannerPage(Frame):
                         continue
                     
                     parts = line.split('|')
-                    # Ensure the line has the correct number of parts
                     if len(parts) < 8:
                         continue
                         
@@ -188,14 +184,12 @@ class BasePlannerPage(Frame):
             for task in self.tasks:
                 completed_str = "True" if task["completed"] else "False"
                 career_task_str = "True" if task.get("is_career_task") else "False"
-                # New format: TASK|description|date|completed|career|day_of_week|is_career_task|created_date
                 f.write(f"TASK|{task['description']}|{task['date']}|{completed_str}|{task['career']}|{task['day_of_week']}|{career_task_str}|{task['created_date']}\n")
     
     def update_task_list(self):
         """Refresh the task listbox with filtered and sorted tasks."""
         self.task_listbox.delete(0, END)
         
-        # Sort tasks: career tasks first, then by date
         sorted_tasks = sorted(
             self.filtered_tasks, 
             key=lambda t: (not t.get("is_career_task", False), t["date"])
@@ -213,24 +207,31 @@ class BasePlannerPage(Frame):
         if not selection_indices:
             return None
             
-        # Get the displayed text of the selected item
         selected_index = selection_indices[0]
         selected_text = self.task_listbox.get(selected_index)
         
-        # Parse the text to find the task's date and description
-        # Example text: "✓ [2023-10-27] [Full-Stack Developer] Build a simple REST API"
         try:
+            # Split the string into parts. Max 3 splits.
+            # Example: "✓ [2023-10-27] [Full-Stack Developer] Build a simple REST API"
+            # Example: "○ [2023-10-27] My custom task"
             parts = selected_text.split('] ', 2)
-            task_date_str = parts[0][2:] # Remove "✓ [" or "○ ["
-            task_description = parts[2]
             
+            # Extract date from the first part, e.g., "✓ [2023-10-27"
+            task_date_str = parts[0].split('[')[1].strip()
+
+            if len(parts) == 2: # No career tag
+                task_description = parts[1]
+            else: # Career tag is present
+                task_description = parts[2]
+
             # Find the task in our main list using the parsed date and description
             for task in self.tasks:
                 if task["date"] == task_date_str and task["description"] == task_description:
                     return task
-        except IndexError:
+        except (IndexError, KeyError):
             # This can happen if the display format is unexpected
-            messagebox.showerror("Error", "Could not parse the selected task. Please check the format.")
+            print(f"DEBUG: Parsing failed for text: {selected_text}") # Debug print
+            messagebox.showerror("Error", f"Could not parse the selected task.\nText: {selected_text}")
             return None
             
         return None
@@ -254,7 +255,6 @@ class BasePlannerPage(Frame):
             return
             
         if messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete this task?\n\n'{task['description']}'"):
-            # Remove the task from the main list
             self.tasks.remove(task)
             self.save_tasks()
             self.apply_filters(self.current_date_filter, self.current_career_filter)
