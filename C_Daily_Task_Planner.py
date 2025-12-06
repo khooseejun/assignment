@@ -21,13 +21,14 @@ class BasePlannerPage(Frame):
         main_container = Frame(self)
         main_container.pack(fill="both", expand=True, padx=10, pady=5)
         
-        right_frame = Frame(main_container, bd=1, relief="raised")
-        right_frame.pack(side="right", fill="both", expand=True)
+        # Task list frame - now takes full width
+        task_frame = Frame(main_container, bd=1, relief="raised")
+        task_frame.pack(side="right", fill="both", expand=True)
         
-        Label(right_frame, text="Task List", font=("Arial", 16, "bold")).pack(pady=10)
+        Label(task_frame, text="Task List", font=("Arial", 16, "bold")).pack(pady=10)
         
         # Filter buttons
-        filter_frame = Frame(right_frame)
+        filter_frame = Frame(task_frame)
         filter_frame.pack(pady=10)
         
         Label(filter_frame, text="Filter by Date:").pack()
@@ -41,7 +42,7 @@ class BasePlannerPage(Frame):
         Button(date_button_frame, text="This Week", command=lambda: self.apply_filters("week", self.current_career_filter), width=10).pack(side="left", padx=2)
         
         # Career filter
-        career_frame = Frame(right_frame)
+        career_frame = Frame(task_frame)
         career_frame.pack(pady=10)
         
         Label(career_frame, text="Filter by Career:").pack()
@@ -52,14 +53,14 @@ class BasePlannerPage(Frame):
         self.career_filter_menu.pack(pady=5)
         
         # Task statistics
-        stats_frame = Frame(right_frame)
+        stats_frame = Frame(task_frame)
         stats_frame.pack(pady=10)
         
         self.stats_label = Label(stats_frame, text="", font=("Arial", 10))
         self.stats_label.pack()
         
         # Task list frame with scrollbar
-        list_frame = Frame(right_frame)
+        list_frame = Frame(task_frame)
         list_frame.pack(fill="both", expand=True, padx=10, pady=5)
         
         scrollbar = ttk.Scrollbar(list_frame)
@@ -70,13 +71,14 @@ class BasePlannerPage(Frame):
         scrollbar.config(command=self.task_listbox.yview)
         
         # Task control buttons
-        control_frame = Frame(right_frame)
+        control_frame = Frame(task_frame)
         control_frame.pack(pady=10)
         
         Button(control_frame, text="Mark Complete", command=self.mark_complete, bg="#4CAF50", fg="white").pack(side="left", padx=5)
         Button(control_frame, text="Delete Task", command=self.delete_task, bg="#f44336", fg="white").pack(side="left", padx=5)
         
-        self.load_tasks()
+        # Load tasks on initialization
+        self.after(100, self.on_show)  # Delay to ensure UI is fully loaded
     
     def on_show(self):
         self.load_tasks()
@@ -154,41 +156,73 @@ class BasePlannerPage(Frame):
                     if len(parts) < 8:
                         continue
                         
+                    # Handle the case where career might be None
+                    career_value = parts[4] if len(parts) > 4 and parts[4] != "None" else None
+                    day_of_week_value = int(parts[5]) if len(parts) > 5 and parts[5] != "None" else None
+                    
                     self.tasks.append({
                         "description": parts[1],
                         "date": parts[2],
                         "completed": parts[3].lower() == "true",
-                        "career": parts[4] if parts[4] != "None" else None,
-                        "day_of_week": int(parts[5]) if parts[5] != "None" else None,
+                        "career": career_value,
+                        "day_of_week": day_of_week_value,
                         "is_career_task": parts[6].lower() == "true",
-                        "created_date": parts[7]
+                        "created_date": parts[7] if len(parts) > 7 else datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     })
         except FileNotFoundError:
+            self.tasks = []
+        except Exception as e:
+            print(f"Error loading tasks: {e}")
             self.tasks = []
     
     def save_tasks(self):
         """Save all tasks and career choices to the text file."""
         career_lines = []
+        shortterm_lines = []
+        longterm_lines = []
+        
         try:
             with open("tasks.txt", "r") as f:
                 for line in f:
                     if line.startswith("CAREER:"):
                         career_lines.append(line.strip())
+                    elif line.startswith("SHORTTERM:"):
+                        shortterm_lines.append(line.strip())
+                    elif line.startswith("LONGTERM:"):
+                        longterm_lines.append(line.strip())
         except FileNotFoundError:
             career_lines = []
+            shortterm_lines = []
+            longterm_lines = []
         
         with open("tasks.txt", "w") as f:
+            # Write back career choices
             for line in career_lines:
                 f.write(line + "\n")
             
+            # Write back short-term goals
+            for line in shortterm_lines:
+                f.write(line + "\n")
+                
+            # Write back long-term goals
+            for line in longterm_lines:
+                f.write(line + "\n")
+            
+            # Write all tasks
             for task in self.tasks:
                 completed_str = "True" if task["completed"] else "False"
                 career_task_str = "True" if task.get("is_career_task") else "False"
-                f.write(f"TASK|{task['description']}|{task['date']}|{completed_str}|{task['career']}|{task['day_of_week']}|{career_task_str}|{task['created_date']}\n")
+                career_str = task.get("career") if task.get("career") else "None"
+                day_of_week_str = str(task.get("day_of_week")) if task.get("day_of_week") is not None else "None"
+                f.write(f"TASK|{task['description']}|{task['date']}|{completed_str}|{career_str}|{day_of_week_str}|{career_task_str}|{task['created_date']}\n")
     
     def update_task_list(self):
         """Refresh the task listbox with filtered and sorted tasks."""
         self.task_listbox.delete(0, END)
+        
+        if not self.filtered_tasks:
+            self.task_listbox.insert(END, "No tasks found")
+            return
         
         sorted_tasks = sorted(
             self.filtered_tasks, 
@@ -197,7 +231,7 @@ class BasePlannerPage(Frame):
         
         for task in sorted_tasks:
             status = "✓" if task["completed"] else "○"
-            career_tag = f"[{task.get('career')}] " if task.get("is_career_task") else ""
+            career_tag = f"[{task.get('career')}] " if task.get("is_career_task") and task.get("career") else ""
             display_text = f"{status} [{task['date']}] {career_tag}{task['description']}"
             self.task_listbox.insert(END, display_text)
     
@@ -209,6 +243,10 @@ class BasePlannerPage(Frame):
             
         selected_index = selection_indices[0]
         selected_text = self.task_listbox.get(selected_index)
+        
+        # Skip if it's the "No tasks found" message
+        if selected_text == "No tasks found":
+            return None
         
         try:
             # Split the string into parts. Max 3 splits.

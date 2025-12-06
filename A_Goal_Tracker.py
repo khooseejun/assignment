@@ -8,98 +8,7 @@ class BaseGoalPage(Frame):
         self.pages = pages 
         self.career_choices = []
         
-        top = Frame(self, bg="#CFE8FF")
-        top.pack(fill="x", pady=8, padx=10)
-        Label(top, text="Goal Tracker", font=("Arial", 20, "bold"),bg="#CFE8FF").pack(side="left", padx=12)
-        Button(top, text="Back", command=lambda: self.pages.show_frame("HomePage"), bg="red", fg="white",height=1, width=10).pack(side="right", padx=12)
-
-        goals_body = Frame(self, bd=1, relief="raised")
-        goals_body.pack(fill="both", expand=True, padx=15, pady=5)
-        goals_body.pack_propagate(False)
-
-        def show_career_details(*args):
-            career = selected_career.get()
-            if career in career_details:
-                info = career_details[career]
-                output_label.config(
-                    text=f"{career}\n\n"
-                        f"Short-term:\n{info['short_term']}\n\n"
-                        f"Long-term:\n{info['long_term']}"
-                )
-            else:
-                output_label.config(text="Choose a career")
-        
-        def popbox():
-            career = selected_career.get()
-            if career not in career_list:
-                messagebox.showwarning(title="Career Submit",message="Choose a career, not choose a bug! :(")
-                return
-            if career in self.career_choices:
-                messagebox.showwarning(title="Career Submit", message="You already choose this career before.")
-                return
-            
-            if messagebox.askokcancel(title="Career Submit",message=f"Are you sure you want choose {career} ?"):
-                self.save_career_choice(career)
-                self.generate_career_tasks(career)
-                
-                messagebox.showinfo(title="Career Submit", 
-                    message=f"Career '{career}' selected successfully!\n\n"
-                           f"7 daily tasks have been added to your Daily Task Planner.\n"
-                           f"Check the Planner page to see your new tasks!")
-            
-        weltext = Frame(goals_body,bd=2, relief="raised")
-        weltext.pack(fill="x")
-
-        Label(weltext, text="Let select your Career\nStart you target", font=("Arial", 20, "bold")).pack(padx=10)
-        career_list = [
-            "Full-Stack Developer",
-            "Machine Learning Engineer",
-            "Site Reliability Engineer",
-            "Mobile Development Specialist",
-            "Cybersecurity Engineer",
-            "Data Engineer"
-        ]
-
-        selected_career = StringVar()
-        selected_career.set("Choose a Career")
-        
-        OptionMenu(goals_body, selected_career, *career_list).pack(pady=10)
-        selected_career.trace_add("write", show_career_details)
-
-        output_label = Label(goals_body, text="", justify=LEFT,font=("Arial", 12, "bold"),anchor="w")
-        output_label.pack(padx=10, pady=20, fill="both")
-        output_label.config(text="Choose a career")
-
-        submit = Button(goals_body, text="Submit", bg="blue", fg="white",width=30, height=2,command=popbox)
-        submit.pack(side=BOTTOM,pady=10)
-
-        career_details = {
-            "Full-Stack Developer": {
-                "short_term": "Build and deploy a simple personal blog project using HTML/CSS/JavaScript (Frontend) \nand Python/Flask (Backend) to a cloud server. (3 months)",
-                "long_term": "Become a proficient full-stack developer capable of designing, building, and \ndeploying complex, data-driven web applications. (2 years)"
-            },
-            "Machine Learning Engineer": {
-                "short_term": "Complete 3 end-to-end ML projects (e.g., predictive model, image classifier) and achieve a bronze medal \non a Kaggle competition. (6 months)",
-                "long_term": "Transition into a professional AI/ML Engineer role, specializing in building and \ndeploying scalable machine learning models. (1.5 years)"
-            },
-            "Site Reliability Engineer": {
-                "short_term": "Establish a complete CI/CD pipeline and achieve automated deployment & monitoring for a \nmicroservices project. (6 months)",
-                "long_term": "Become a core SRE, improving system availability to 99.9% and establishing a robust incident \nresponse process. (2 years)"
-            },
-            "Mobile Development Specialist": {
-                "short_term": "Independently develop and publish a fully-functional iOS app to the App Store. (4 months)",
-                "long_term": "Master SwiftUI, Combine, and performance optimization to solve complex UI and \narchitectural challenges. (1.5 years)"
-            },
-            "Cybersecurity Engineer": {
-                "short_term": "Obtain the OSCP certification and demonstrate the ability to independently find and exploit medium-to-high \nseverity vulnerabilities in authorized penetration tests. (1 year)",
-                "long_term": "Specialize in AppSec or Threat Intelligence, capable of building proactive defense systems \nfor an enterprise. (3 years)"
-            },
-            "Data Engineer": {
-                "short_term": "Design and build a scalable data pipeline that ingests, processes, and stores data from multiple sources \ninto a data warehouse. (8 months)",
-                "long_term": "Become a lead data engineer, responsible for architecting and maintaining the company's \nentire data infrastructure. (2 years)"
-            }
-        }
-        
+        # Define career tasks dictionary at class level
         self.career_task = {
             "Full-Stack Developer": {
                 1: {"Front-End Focus": "Work on a single HTML/CSS component (e.g., a navbar, a card). Make it pixel-perfect and responsive."},
@@ -157,7 +66,239 @@ class BaseGoalPage(Frame):
             }
         }
         
+        # Generic tasks for careers not in template
+        self.generic_tasks = {
+            1: {"Foundation": "Review and understand the fundamental concepts and terminology of your field."},
+            2: {"Practical Application": "Apply what you learned yesterday to a small, hands-on project or exercise."},
+            3: {"Tool Exploration": "Research and try out a popular tool or software used in your career field."},
+            4: {"Community Engagement": "Join an online community, forum, or social media group related to your career. Participate in discussions."},
+            5: {"Goal Review": "Review your short-term and long-term goals. Break them down into smaller, actionable steps."},
+            6: {"Learning Resource": "Find and review a high-quality learning resource (book, course, tutorial) for your career."},
+            7: {"Networking": "Reach out to at least one professional in your field for advice or mentorship."}
+        }
+        
+        # Load existing career choices when initializing
         self.load_career_choices()
+        
+        top = Frame(self, bg="#CFE8FF")
+        top.pack(fill="x", pady=8, padx=10)
+        Label(top, text="Goal Tracker", font=("Arial", 20, "bold"),bg="#CFE8FF").pack(side="left", padx=12)
+        Button(top, text="Back", command=lambda: self.pages.show_frame("HomePage"), bg="red", fg="white",height=1, width=10).pack(side="right", padx=12)
+
+        goals_body = Frame(self, bd=1, relief="raised")
+        goals_body.pack(fill="both", expand=True, padx=15, pady=5)
+        goals_body.pack_propagate(False)
+
+        # ----------- New UI -------------
+        weltext = Frame(goals_body, bd=2, relief="raised", bg="#85C2FA")
+        weltext.pack(fill="x")
+        Label(weltext, text="Enter Your Own Career & Goals", font=("Arial", 20, "bold"), bg="#85C2FA").pack(padx=10)
+
+        # Career input
+        textentrybody = Frame(goals_body)
+        textentrybody.pack(fill=X)
+        Label(textentrybody, text="Career Name:", font=("Arial", 12, "bold")).pack(side=LEFT,padx=10, pady=15)
+        self.career_entry = Entry(textentrybody, font=("Arial", 12), width=60)
+        self.career_entry.pack(padx=5,side=LEFT)
+
+        # Short-term input 
+        short_tbody = Frame(goals_body)
+        short_tbody.pack(fill=X)
+        Label(short_tbody, text="Short-term Goal:", font=("Arial", 12, "bold")).pack(side=LEFT,padx=10, pady=15)
+        self.short_term_entry = Text(short_tbody, height=3, width=80, font=("Arial", 12))
+        self.short_term_entry.pack(padx=10, pady=5,side=LEFT)
+        
+
+        # Short-term time input (months) - Changed to Spinbox
+        time_short_frame = Frame(goals_body)
+        time_short_frame.pack(fill=X)
+        Label(time_short_frame, text="Duration (Months):", font=("Arial", 12, "bold")).pack(side=LEFT, padx=10)
+        
+        # Create a frame for the spinbox and label
+        month_spinbox_frame = Frame(time_short_frame)
+        month_spinbox_frame.pack(side=LEFT, padx=5)
+        
+        # Initialize month variable for Spinbox
+        self.month_var = StringVar(value="1")
+        self.short_time_entry = Spinbox(
+            month_spinbox_frame, 
+            from_=1, 
+            to=12, 
+            width=8,
+            font=("Arial", 12),
+            textvariable=self.month_var,
+            command=self.validate_month_spinbox
+        )
+        self.short_time_entry.pack(side=LEFT)
+        
+        Label(month_spinbox_frame, text="months", font=("Arial", 10)).pack(side=LEFT, padx=5)
+
+        # Long-term input 
+        long_tbody = Frame(goals_body)
+        long_tbody.pack(fill=X)
+        Label(long_tbody, text="Long-term Goal:", font=("Arial", 12, "bold")).pack(side=LEFT,padx=10, pady=15)
+        self.long_term_entry = Text(long_tbody, height=3, width=80, font=("Arial", 12))
+        self.long_term_entry.pack(side=LEFT,padx=10, pady=5)
+
+        # Long-term time input (years) - Changed to Spinbox
+        time_long_frame = Frame(goals_body)
+        time_long_frame.pack(fill=X)
+        Label(time_long_frame, text="Duration (Years):", font=("Arial", 12, "bold")).pack(side=LEFT, padx=10)
+        
+        # Create a frame for the spinbox and label
+        year_spinbox_frame = Frame(time_long_frame)
+        year_spinbox_frame.pack(side=LEFT, padx=5)
+        
+        # Initialize year variable for Spinbox
+        self.year_var = StringVar(value="1")
+        self.long_time_entry = Spinbox(
+            year_spinbox_frame, 
+            from_=1, 
+            to=10, 
+            width=8,
+            font=("Arial", 12),
+            textvariable=self.year_var,
+            command=self.validate_year_spinbox
+        )
+        self.long_time_entry.pack(side=LEFT)
+        
+        Label(year_spinbox_frame, text="years", font=("Arial", 10)).pack(side=LEFT, padx=5)
+
+        #Textbox - Modified to show career names
+        textframe = Frame(goals_body)
+        textframe.pack(fill=BOTH,padx=2,pady=10)
+        Label(textframe,text="Your Careers:",font=("Arial", 12, "bold")).pack(side=TOP,padx=10)
+        self.textbox =  Text(textframe,width=100, height=9, font=("Arial", 11))
+        self.textbox.pack(pady=2)
+        self.textbox.config(state=DISABLED)
+
+        # Submit button
+        submit = Button(goals_body, text="Submit", bg="blue", fg="white", width=30, height=2, command=self.submit_career)
+        submit.pack(side=BOTTOM, pady=10)
+        
+        # Update the textbox with existing careers
+        self.update_career_display()
+    
+    def on_show(self):
+        """Called when the page is shown"""
+        self.load_career_choices()
+        self.update_career_display()
+    
+    def validate_month_spinbox(self):
+        """Validation for month spinbox - always valid due to spinbox constraints"""
+        # Spinbox already ensures value is between 1-12, so no need for validation
+        return True
+    
+    def validate_year_spinbox(self):
+        """Validation for year spinbox - always valid due to spinbox constraints"""
+        # Spinbox already ensures value is between 1-10, so no need for validation
+        return True
+    
+    def update_career_display(self):
+        """Update the textbox to display only career names"""
+        self.textbox.config(state=NORMAL)
+        self.textbox.delete(1.0, END)
+        
+        if self.career_choices:
+            self.textbox.insert(END, "Career Goals:\n\n")
+            for i, career in enumerate(self.career_choices, 1):
+                self.textbox.insert(END, f"{i}. {career}\n")
+        else:
+            self.textbox.insert(END, "No careers added yet.\n\nAdd your first career using the form above.")
+        
+        self.textbox.config(state=DISABLED)
+
+    def submit_career(self):
+        career = self.career_entry.get().strip()
+        short_term = self.short_term_entry.get("1.0", END).strip()
+        long_term = self.long_term_entry.get("1.0", END).strip()
+        
+        # Get values from spinboxes using the StringVar
+        months = self.month_var.get()
+        years = self.year_var.get()
+
+        if not career or not short_term or not long_term:
+            messagebox.showwarning("Incomplete", "Please fill in all fields.")
+            return
+
+        if career in self.career_choices:
+            messagebox.showwarning("Duplicate", "You already created this career before.")
+            return
+
+        if messagebox.askokcancel("Confirm", f"Add career '{career}'?\n\nDuration: {months} month(s), {years} year(s)"):
+            # save career
+            self.save_career_choice(career)
+
+            # save user-defined goals with duration
+            with open("tasks.txt", "a") as f:
+                f.write(f"SHORTTERM:{career}|{short_term}|{months}\n")
+                f.write(f"LONGTERM:{career}|{long_term}|{years}\n")
+
+            # Find closest matching career template
+            closest_career = self.find_closest_career(career)
+            
+            # Generate 7-day tasks using the closest career template or generic tasks
+            if closest_career:
+                self.generate_career_tasks(closest_career, career)
+                messagebox.showinfo("Success", f"Career '{career}' added!\n\nYour 7 daily tasks are created based on {closest_career} template!")
+            else:
+                # Generate generic tasks for careers not in template
+                self.generate_generic_tasks(career)
+                messagebox.showinfo("Success", f"Career '{career}' added!\n\nYour 7 daily tasks are created with a generic template!")
+
+            # Update the career display after adding
+            self.update_career_display()
+
+        # Clear form fields
+        self.career_entry.delete(0, END)
+        self.short_term_entry.delete("1.0", END)
+        self.long_term_entry.delete("1.0", END)
+        # Reset spinboxes using StringVar
+        self.month_var.set("1")
+        self.year_var.set("1")
+    
+    def find_closest_career(self, career):
+        """Find the closest matching career template based on keywords"""
+        career_lower = career.lower()
+        
+        # Define keyword mappings for each career
+        career_keywords = {
+            "Full-Stack Developer": ["full-stack", "full stack", "web", "developer", "frontend", "backend"],
+            "Machine Learning Engineer": ["machine learning", "ml", "ai", "artificial intelligence", "data science"],
+            "Site Reliability Engineer": ["sre", "site reliability", "devops", "infrastructure", "operations"],
+            "Mobile Development Specialist": ["mobile", "ios", "android", "app", "smartphone"],
+            "Cybersecurity Engineer": ["cybersecurity", "security", "penetration", "hacking", "network security"],
+            "Data Engineer": ["data", "etl", "pipeline", "warehouse", "big data"]
+        }
+        
+        # Check for keyword matches
+        for template_career, keywords in career_keywords.items():
+            for keyword in keywords:
+                if keyword in career_lower:
+                    return template_career
+        
+        # No direct match found, return None
+        return None
+    
+    def generate_generic_tasks(self, career):
+        """Generate generic weekly tasks for careers not in template."""
+        today = date.today()
+        
+        with open("tasks.txt", "a") as f:
+            for day_num in range(1, 8):
+                if day_num in self.generic_tasks:
+                    task_info = self.generic_tasks[day_num]
+                    title = list(task_info.keys())[0]
+                    description = list(task_info.values())[0]
+                    
+                    task_date = today + timedelta(days=day_num - 1)
+                    
+                    # Format: TASK|description|date|completed|career|day_of_week|is_career_task|created_date
+                    task_line = (
+                        f"TASK|{title}: {description}|{task_date.strftime('%Y-%m-%d')}|False|"
+                        f"{career}|{day_num}|True|{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                    )
+                    f.write(task_line)
     
     def load_career_choices(self):
         try:
@@ -165,6 +306,7 @@ class BaseGoalPage(Frame):
                 content = f.read()
                 if content:
                     lines = content.strip().split('\n')
+                    self.career_choices = []
                     for line in lines:
                         if line.startswith("CAREER:"):
                             career = line[7:].strip()
@@ -184,22 +326,22 @@ class BaseGoalPage(Frame):
                 f.write(f"CAREER:{career}\n")
                 self.career_choices.append(career)
     
-    def generate_career_tasks(self, career):
-        """Generate weekly tasks for the selected career and save them to tasks.txt."""
+    def generate_career_tasks(self, template_career, user_career):
+        """Generate weekly tasks for selected career and save them to tasks.txt."""
         today = date.today()
         
         with open("tasks.txt", "a") as f:
             for day_num in range(1, 8):
-                if day_num in self.career_task[career]:
-                    task_info = self.career_task[career][day_num]
+                if day_num in self.career_task[template_career]:
+                    task_info = self.career_task[template_career][day_num]
                     title = list(task_info.keys())[0]
                     description = list(task_info.values())[0]
                     
                     task_date = today + timedelta(days=day_num - 1)
                     
-                    # New format: TASK|description|date|completed|career|day_of_week|is_career_task|created_date
+                    # Format: TASK|description|date|completed|career|day_of_week|is_career_task|created_date
                     task_line = (
                         f"TASK|{title}: {description}|{task_date.strftime('%Y-%m-%d')}|False|"
-                        f"{career}|{day_num}|True|{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                        f"{user_career}|{day_num}|True|{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
                     )
                     f.write(task_line)
