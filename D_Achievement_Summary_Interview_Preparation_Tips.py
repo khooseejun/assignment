@@ -1,3 +1,4 @@
+# D_Achievement_Summary_Interview_Preparation_Tips.py
 from tkinter import *
 from tkinter import messagebox
 
@@ -7,10 +8,6 @@ class BaseAchievementPage(Frame):
     def __init__(self, parent, pages):
         super().__init__(parent)
         self.pages = pages
-
-        #     # 如果文件不存在就创建初始内容
-        # if not os.path.exists(self.DATA_FILE):
-        #     self.create_default_file()
 
         top = Frame(self, bg="#3B68BD")
         top.pack(fill="x", pady=8, padx=10)
@@ -32,36 +29,60 @@ class BaseAchievementPage(Frame):
         Button(button_frame, text="Refresh Summary", width=20,
                 bg="#4a71f3", fg="white").pack(side="left", padx=10) #command=self.refresh_summary
         
-        # # 初始载入
-        # self.refresh_summary()
-
         # go to QAPAge
         Button(
         achievement_frame,text="Go to Interview Q&A Manager",command=lambda: self.pages.show_frame("QAPage"),bg="#0696e9",fg="white",height=2,
         width=30).pack(side="bottom",pady=10)
 
-    # # ==============================
-    # #      FILE HANDLING SECTION
-    # # ==============================
-    # def create_default_file(self):
-    #     with open(self.DATA_FILE, "w") as f:
-    #         f.write("goals_completed: 0\n")
-    #         f.write("skills_acquired: \n")
-    #         f.write("tasks_completed: 0\n")
     def show_report(self):
-        report = {
-            "goals_completed": 0,
-            "skills_acquired": ["CSS", "HTML", "PYTHON"], 
-            "tasks_completed": 0
-        }
-        
-        # 将字典格式化为字符串
-        report_text = f"Summary report:\n"
-        report_text += f"• Goals completed: {report['goals_completed']}\n"
-        report_text += f"• Skills acquired: {', '.join(report['skills_acquired'])}\n"
-        report_text += f"• Tasks completed: {report['tasks_completed']}\n"
-        
-        # 清除文本框内容并插入新内容
-        self.summary_box.delete(1.0, END)  # 清除现有内容
-        self.summary_box.insert(END, report_text)  # 插入新内容
-
+        """Generate a report based on the simplified tasks.txt format."""
+        try:
+            careers = []
+            short_goals = []
+            long_goals = []
+            tasks = []
+            completed_tasks = 0
+            
+            with open("tasks.txt", "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("CAREER|"):
+                        careers.append(line[7:].strip())
+                    elif line.startswith("SHORT|"):
+                        short_goals.append(line[6:].strip())
+                    elif line.startswith("LONG|"):
+                        long_goals.append(line[5:].strip())
+                    elif line.startswith("TASK|"):
+                        parts = line.split('|')
+                        if len(parts) >= 4:
+                            tasks.append(parts[1].strip())
+                            if parts[3].strip() == "completed":
+                                completed_tasks += 1
+            
+            # Format the report
+            report_text = "CAREER & SKILLS DEVELOPMENT REPORT\n"
+            report_text += "=" * 50 + "\n\n"
+            
+            report_text += "CAREERS TRACKED:\n"
+            for career in careers:
+                report_text += f"• {career}\n"
+            
+            report_text += "\nSHORT-TERM GOALS:\n"
+            for goal in short_goals:
+                report_text += f"• {goal}\n"
+                
+            report_text += "\nLONG-TERM GOALS:\n"
+            for goal in long_goals:
+                report_text += f"• {goal}\n"
+                
+            report_text += f"\nTASKS COMPLETED: {completed_tasks} out of {len(tasks)}\n"
+            
+            # Display the report
+            self.summary_box.delete(1.0, END)
+            self.summary_box.insert(END, report_text)
+            
+        except FileNotFoundError:
+            self.summary_box.delete(1.0, END)
+            self.summary_box.insert(END, "No data found. Please add careers and goals first.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to generate report: {str(e)}")

@@ -1,3 +1,4 @@
+# C_Daily_Task_Planner.py
 from tkinter import *
 from tkinter import ttk, messagebox
 from datetime import datetime, date, timedelta
@@ -94,7 +95,7 @@ class BasePlannerPage(Frame):
                 content = f.read()
                 if content:
                     lines = content.strip().split('\n')
-                    self.career_choices = sorted(list({line[7:].strip() for line in lines if line.startswith("CAREER:")}))
+                    self.career_choices = sorted(list({line[7:].strip() for line in lines if line.startswith("CAREER|")}))
         except FileNotFoundError:
             self.career_choices = []
     
@@ -128,7 +129,7 @@ class BasePlannerPage(Frame):
         if career_filter == "All Careers":
             self.filtered_tasks = date_filtered
         else:
-            self.filtered_tasks = [t for t in date_filtered if t.get("career") == career_filter]
+            self.filtered_tasks = [t for t in date_filtered if career_filter in t["description"]]
         
         self.update_task_list()
         self.update_statistics()
@@ -136,14 +137,13 @@ class BasePlannerPage(Frame):
     def update_statistics(self):
         """Update task statistics display."""
         total_tasks = len(self.filtered_tasks)
-        completed_tasks = sum(1 for task in self.filtered_tasks if task.get("completed"))
-        career_tasks = sum(1 for task in self.filtered_tasks if task.get("is_career_task"))
+        completed_tasks = sum(1 for task in self.filtered_tasks if task.get("status") == "completed")
         
-        stats_text = f"Total: {total_tasks} | Completed: {completed_tasks} | Career Tasks: {career_tasks}"
+        stats_text = f"Total: {total_tasks} | Completed: {completed_tasks}"
         self.stats_label.config(text=stats_text)
     
     def load_tasks(self):
-        """Load tasks from the text file."""
+        """Load tasks from the text file with simplified format."""
         try:
             with open("tasks.txt", "r") as f:
                 self.tasks = []
@@ -153,21 +153,14 @@ class BasePlannerPage(Frame):
                         continue
                     
                     parts = line.split('|')
-                    if len(parts) < 8:
+                    if len(parts) < 4:
                         continue
                         
-                    # Handle the case where career might be None
-                    career_value = parts[4] if len(parts) > 4 and parts[4] != "None" else None
-                    day_of_week_value = int(parts[5]) if len(parts) > 5 and parts[5] != "None" else None
-                    
+                    # Simplified format: TASK|career_detail|date|status
                     self.tasks.append({
                         "description": parts[1],
                         "date": parts[2],
-                        "completed": parts[3].lower() == "true",
-                        "career": career_value,
-                        "day_of_week": day_of_week_value,
-                        "is_career_task": parts[6].lower() == "true",
-                        "created_date": parts[7] if len(parts) > 7 else datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        "status": parts[3]  # "pending" or "completed"
                     })
         except FileNotFoundError:
             self.tasks = []
@@ -176,24 +169,24 @@ class BasePlannerPage(Frame):
             self.tasks = []
     
     def save_tasks(self):
-        """Save all tasks and career choices to the text file."""
+        """Save all tasks and career choices to the text file with simplified format."""
         career_lines = []
-        shortterm_lines = []
-        longterm_lines = []
+        short_lines = []
+        long_lines = []
         
         try:
             with open("tasks.txt", "r") as f:
                 for line in f:
-                    if line.startswith("CAREER:"):
+                    if line.startswith("CAREER|"):
                         career_lines.append(line.strip())
-                    elif line.startswith("SHORTTERM:"):
-                        shortterm_lines.append(line.strip())
-                    elif line.startswith("LONGTERM:"):
-                        longterm_lines.append(line.strip())
+                    elif line.startswith("SHORT|"):
+                        short_lines.append(line.strip())
+                    elif line.startswith("LONG|"):
+                        long_lines.append(line.strip())
         except FileNotFoundError:
             career_lines = []
-            shortterm_lines = []
-            longterm_lines = []
+            short_lines = []
+            long_lines = []
         
         with open("tasks.txt", "w") as f:
             # Write back career choices
@@ -201,20 +194,16 @@ class BasePlannerPage(Frame):
                 f.write(line + "\n")
             
             # Write back short-term goals
-            for line in shortterm_lines:
+            for line in short_lines:
                 f.write(line + "\n")
                 
             # Write back long-term goals
-            for line in longterm_lines:
+            for line in long_lines:
                 f.write(line + "\n")
             
-            # Write all tasks
+            # Write all tasks with simplified format
             for task in self.tasks:
-                completed_str = "True" if task["completed"] else "False"
-                career_task_str = "True" if task.get("is_career_task") else "False"
-                career_str = task.get("career") if task.get("career") else "None"
-                day_of_week_str = str(task.get("day_of_week")) if task.get("day_of_week") is not None else "None"
-                f.write(f"TASK|{task['description']}|{task['date']}|{completed_str}|{career_str}|{day_of_week_str}|{career_task_str}|{task['created_date']}\n")
+                f.write(f"TASK|{task['description']}|{task['date']}|{task['status']}\n")
     
     def update_task_list(self):
         """Refresh the task listbox with filtered and sorted tasks."""
@@ -224,15 +213,11 @@ class BasePlannerPage(Frame):
             self.task_listbox.insert(END, "No tasks found")
             return
         
-        sorted_tasks = sorted(
-            self.filtered_tasks, 
-            key=lambda t: (not t.get("is_career_task", False), t["date"])
-        )
+        sorted_tasks = sorted(self.filtered_tasks, key=lambda t: t["date"])
         
         for task in sorted_tasks:
-            status = "✓" if task["completed"] else "○"
-            career_tag = f"[{task.get('career')}] " if task.get("is_career_task") and task.get("career") else ""
-            display_text = f"{status} [{task['date']}] {career_tag}{task['description']}"
+            status = "✓" if task["status"] == "completed" else "○"
+            display_text = f"{status} [{task['date']}] {task['description']}"
             self.task_listbox.insert(END, display_text)
     
     def _get_selected_task_from_listbox(self):
@@ -249,18 +234,13 @@ class BasePlannerPage(Frame):
             return None
         
         try:
-            # Split the string into parts. Max 3 splits.
-            # Example: "✓ [2023-10-27] [Full-Stack Developer] Build a simple REST API"
-            # Example: "○ [2023-10-27] My custom task"
-            parts = selected_text.split('] ', 2)
+            # Split the string into parts. Max 2 splits.
+            # Example: "✓ [2023-10-27] Full-Stack Developer - Build a simple REST API"
+            parts = selected_text.split('] ', 1)
             
             # Extract date from the first part, e.g., "✓ [2023-10-27"
             task_date_str = parts[0].split('[')[1].strip()
-
-            if len(parts) == 2: # No career tag
-                task_description = parts[1]
-            else: # Career tag is present
-                task_description = parts[2]
+            task_description = parts[1].strip()
 
             # Find the task in our main list using the parsed date and description
             for task in self.tasks:
@@ -281,7 +261,7 @@ class BasePlannerPage(Frame):
             messagebox.showwarning("Selection Error", "Please select a task to mark as complete.")
             return
             
-        task["completed"] = not task["completed"]
+        task["status"] = "completed" if task["status"] == "pending" else "pending"
         self.save_tasks()
         self.apply_filters(self.current_date_filter, self.current_career_filter)
     

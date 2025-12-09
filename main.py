@@ -21,6 +21,7 @@ class MainMenu(Tk):
         super().__init__()
         self.title("Main menu")
         self.geometry("900x600")
+        self.resizable(False, False)
         container = Frame(self)
         container.pack(fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
