@@ -171,22 +171,22 @@ class BasePlannerPage(Frame):
     def save_tasks(self):
         """Save all tasks and career choices to the text file with simplified format."""
         career_lines = []
-        short_lines = []
-        long_lines = []
+        shortterm_lines = []
+        longterm_lines = []
         
         try:
             with open("tasks.txt", "r") as f:
                 for line in f:
                     if line.startswith("CAREER|"):
                         career_lines.append(line.strip())
-                    elif line.startswith("SHORT|"):
-                        short_lines.append(line.strip())
-                    elif line.startswith("LONG|"):
-                        long_lines.append(line.strip())
+                    elif line.startswith("SHORTTERM:"):
+                        shortterm_lines.append(line.strip())
+                    elif line.startswith("LONGTERM:"):
+                        longterm_lines.append(line.strip())
         except FileNotFoundError:
             career_lines = []
-            short_lines = []
-            long_lines = []
+            shortterm_lines = []
+            longterm_lines = []
         
         with open("tasks.txt", "w") as f:
             # Write back career choices
@@ -194,11 +194,11 @@ class BasePlannerPage(Frame):
                 f.write(line + "\n")
             
             # Write back short-term goals
-            for line in short_lines:
+            for line in shortterm_lines:
                 f.write(line + "\n")
                 
             # Write back long-term goals
-            for line in long_lines:
+            for line in longterm_lines:
                 f.write(line + "\n")
             
             # Write all tasks with simplified format

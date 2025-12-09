@@ -35,7 +35,7 @@ class BaseAchievementPage(Frame):
         width=30).pack(side="bottom",pady=10)
 
     def show_report(self):
-        """Generate a report based on the simplified tasks.txt format."""
+        """Generate a report based on the new tasks.txt format."""
         try:
             careers = []
             short_goals = []
@@ -48,10 +48,22 @@ class BaseAchievementPage(Frame):
                     line = line.strip()
                     if line.startswith("CAREER|"):
                         careers.append(line[7:].strip())
-                    elif line.startswith("SHORT|"):
-                        short_goals.append(line[6:].strip())
-                    elif line.startswith("LONG|"):
-                        long_goals.append(line[5:].strip())
+                    elif line.startswith("SHORTTERM:"):
+                        # Parse: SHORTTERM:career|short_term|duration_months
+                        parts = line.split('|')
+                        if len(parts) >= 3:
+                            career = parts[0][10:]  # Remove "SHORTTERM:" prefix
+                            goal = parts[1]
+                            duration = parts[2]
+                            short_goals.append(f"{career}: {goal} (Duration: {duration} months)")
+                    elif line.startswith("LONGTERM:"):
+                        # Parse: LONGTERM:career|long_term|duration_years
+                        parts = line.split('|')
+                        if len(parts) >= 3:
+                            career = parts[0][9:]  # Remove "LONGTERM:" prefix
+                            goal = parts[1]
+                            duration = parts[2]
+                            long_goals.append(f"{career}: {goal} (Duration: {duration} years)")
                     elif line.startswith("TASK|"):
                         parts = line.split('|')
                         if len(parts) >= 4:

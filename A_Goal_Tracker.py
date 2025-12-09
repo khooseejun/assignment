@@ -1,3 +1,4 @@
+# A_Goal_Tracker.py
 from tkinter import *
 from tkinter import messagebox
 from datetime import date, timedelta, datetime
@@ -278,10 +279,10 @@ class BaseGoalPage(Frame):
             # save career with simplified format
             self.save_career_choice(career)
 
-            # save user-defined goals with simplified format
+            # save user-defined goals with new format
             with open("tasks.txt", "a") as f:
-                f.write(f"SHORT|{short_term}\n")
-                f.write(f"LONG|{long_term}\n")
+                f.write(f"SHORTTERM:{career}|{short_term}|{months}\n")
+                f.write(f"LONGTERM:{career}|{long_term}|{years}\n")
 
             # Find closest matching career template
             closest_career = self.find_closest_career(career)
