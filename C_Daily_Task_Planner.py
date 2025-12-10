@@ -1,24 +1,30 @@
-# C_Daily_Task_Planner.py
 from tkinter import *
 from tkinter import ttk, messagebox
 from datetime import datetime, date, timedelta
 
 class BasePlannerPage(Frame):
+    """
+    A class for creating a daily task planner page in a tkinter application.
+    Allows users to view, filter, mark complete, and delete tasks.
+    """
     def __init__(self, parent, pages):
         super().__init__(parent)
-        self.pages = pages
+        self.pages = pages  # Reference to the page manager for navigation
         
-        self.tasks = []
-        self.filtered_tasks = []
-        self.career_choices = []
-        self.current_date_filter = "all"
-        self.current_career_filter = "All Careers"
+        # Initialize data structures
+        self.tasks = []  # List to store all tasks
+        self.filtered_tasks = []  # List to store tasks after applying filters
+        self.career_choices = []  # List to store career choices for filtering
+        self.current_date_filter = "all"  # Current date filter state
+        self.current_career_filter = "All Careers"  # Current career filter state
         
+        # Create the top frame with title and back button
         top = Frame(self,bg="#FFFDFA")
         top.pack(fill="x", pady=8, padx=10)
         Label(top, text="Daily Task Planner", font=("Arial", 20, "bold"),bg="#FFFDFA").pack(side="left", padx=12)
         Button(top, text="Back", command=lambda: self.pages.show_frame("HomePage"), bg="red", height=1, width=10).pack(side="right", padx=12)
 
+        # Main container for all UI elements
         main_container = Frame(self)
         main_container.pack(fill="both", expand=True, padx=10, pady=5)
         
@@ -26,14 +32,16 @@ class BasePlannerPage(Frame):
         task_frame = Frame(main_container, bd=1, relief="raised")
         task_frame.pack(side="right", fill="both", expand=True)
         
+        # Title for the task list
         Label(task_frame, text="Task List", font=("Arial", 16, "bold")).pack(pady=10)
         
-        # Filter buttons
+        # Filter buttons frame
         filter_frame = Frame(task_frame)
         filter_frame.pack(pady=10)
         
         Label(filter_frame, text="Filter by Date:").pack()
         
+        # Date filter buttons
         date_button_frame = Frame(filter_frame)
         date_button_frame.pack(pady=5)
         
@@ -42,18 +50,19 @@ class BasePlannerPage(Frame):
         Button(date_button_frame, text="Tomorrow", command=lambda: self.apply_filters("tomorrow", self.current_career_filter), width=10).pack(side="left", padx=2)
         Button(date_button_frame, text="This Week", command=lambda: self.apply_filters("week", self.current_career_filter), width=10).pack(side="left", padx=2)
         
-        # Career filter
+        # Career filter frame
         career_frame = Frame(task_frame)
         career_frame.pack(pady=10)
         
         Label(career_frame, text="Filter by Career:").pack()
         
+        # Career filter dropdown menu
         self.career_filter_var = StringVar()
         self.career_filter_var.set("All Careers")
         self.career_filter_menu = OptionMenu(career_frame, self.career_filter_var, "All Careers", command=lambda _: self.apply_filters(self.current_date_filter, self.career_filter_var.get()))
         self.career_filter_menu.pack(pady=5)
         
-        # Task statistics
+        # Task statistics frame
         stats_frame = Frame(task_frame)
         stats_frame.pack(pady=10)
         
@@ -64,17 +73,20 @@ class BasePlannerPage(Frame):
         list_frame = Frame(task_frame)
         list_frame.pack(fill="both", expand=True, padx=10, pady=5)
         
+        # Scrollbar for the task list
         scrollbar = ttk.Scrollbar(list_frame)
         scrollbar.pack(side="right", fill="y")
         
+        # Task listbox to display tasks
         self.task_listbox = Listbox(list_frame, yscrollcommand=scrollbar.set, selectmode="single")
         self.task_listbox.pack(fill="both", expand=True)
         scrollbar.config(command=self.task_listbox.yview)
         
-        # Task control buttons
+        # Task control buttons frame
         control_frame = Frame(task_frame)
         control_frame.pack(pady=10)
         
+        # Buttons to mark tasks complete or delete them
         Button(control_frame, text="Mark Complete", command=self.mark_complete, bg="#4CAF50", fg="white").pack(side="left", padx=5)
         Button(control_frame, text="Delete Task", command=self.delete_task, bg="#f44336", fg="white").pack(side="left", padx=5)
         
@@ -82,6 +94,7 @@ class BasePlannerPage(Frame):
         self.after(100, self.on_show)  # Delay to ensure UI is fully loaded
     
     def on_show(self):
+        """Called when the page is shown to refresh the task list and filters"""
         self.load_tasks()
         self.load_career_choices()
         self.update_career_filter()
@@ -113,9 +126,11 @@ class BasePlannerPage(Frame):
         self.current_career_filter = career_filter
         self.career_filter_var.set(career_filter)
         
+        # Get date ranges for filtering
         today, tomorrow = date.today(), date.today() + timedelta(days=1)
         week_end = today + timedelta(days=7)
         
+        # Apply date filter
         date_filtered = []
         if date_filter == "all":
             date_filtered = self.tasks
@@ -126,11 +141,13 @@ class BasePlannerPage(Frame):
         elif date_filter == "week":
             date_filtered = [t for t in self.tasks if today <= datetime.strptime(t["date"], "%Y-%m-%d").date() <= week_end]
 
+        # Apply career filter
         if career_filter == "All Careers":
             self.filtered_tasks = date_filtered
         else:
             self.filtered_tasks = [t for t in date_filtered if career_filter in t["description"]]
         
+        # Update the task list display
         self.update_task_list()
         self.update_statistics()
     
@@ -213,8 +230,10 @@ class BasePlannerPage(Frame):
             self.task_listbox.insert(END, "No tasks found")
             return
         
+        # Sort tasks by date
         sorted_tasks = sorted(self.filtered_tasks, key=lambda t: t["date"])
         
+        # Display tasks with status indicator
         for task in sorted_tasks:
             status = "✓" if task["status"] == "completed" else "○"
             display_text = f"{status} [{task['date']}] {task['description']}"
@@ -234,7 +253,7 @@ class BasePlannerPage(Frame):
             return None
         
         try:
-            # Split the string into parts. Max 2 splits.
+            # Parse the selected text to extract date and description
             # Example: "✓ [2023-10-27] Full-Stack Developer - Build a simple REST API"
             parts = selected_text.split('] ', 1)
             
@@ -261,6 +280,7 @@ class BasePlannerPage(Frame):
             messagebox.showwarning("Selection Error", "Please select a task to mark as complete.")
             return
             
+        # Toggle task status
         task["status"] = "completed" if task["status"] == "pending" else "pending"
         self.save_tasks()
         self.apply_filters(self.current_date_filter, self.current_career_filter)
@@ -272,6 +292,7 @@ class BasePlannerPage(Frame):
             messagebox.showwarning("Selection Error", "Please select a task to delete.")
             return
             
+        # Confirm deletion with user
         if messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete this task?\n\n'{task['description']}'"):
             self.tasks.remove(task)
             self.save_tasks()
