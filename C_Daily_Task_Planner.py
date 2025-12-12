@@ -69,18 +69,46 @@ class BasePlannerPage(Frame):
         self.stats_label = Label(stats_frame, text="", font=("Arial", 10))
         self.stats_label.pack()
         
-        # Task list frame with scrollbar
-        list_frame = Frame(task_frame)
-        list_frame.pack(fill="both", expand=True, padx=10, pady=5)
+        # Task table frame with scrollbar
+        table_frame = Frame(task_frame)
+        table_frame.pack(fill="both", expand=True, padx=10, pady=5)
         
-        # Scrollbar for the task list
-        scrollbar = ttk.Scrollbar(list_frame)
+        # Create a Treeview with columns - now with separate columns for career, title, and description
+        columns = ("status", "date", "career", "title", "description")
+        self.task_tree = ttk.Treeview(table_frame, columns=columns, show="headings", selectmode="browse")
+        
+        # Define headings
+        self.task_tree.heading("status", text="✓")
+        self.task_tree.heading("date", text="Date")
+        self.task_tree.heading("career", text="Career")
+        self.task_tree.heading("title", text="Task Title")
+        self.task_tree.heading("description", text="Description")
+        
+        # Configure column widths
+        self.task_tree.column("status", width=30, minwidth=30, anchor="center", stretch=False)
+        self.task_tree.column("date", width=80, minwidth=75, anchor="center", stretch=False)
+        self.task_tree.column("career", width=120, minwidth=100, anchor="w", stretch=False)
+        self.task_tree.column("title", width=150, minwidth=120, anchor="w", stretch=False)
+        self.task_tree.column("description", width=400, minwidth=200, anchor="w", stretch=True)
+        
+        # Add a scrollbar
+        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.task_tree.yview)
+        self.task_tree.configure(yscrollcommand=scrollbar.set)
+        
+        # Pack the Treeview and scrollbar
+        self.task_tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # Task listbox to display tasks
-        self.task_listbox = Listbox(list_frame, yscrollcommand=scrollbar.set, selectmode="single")
-        self.task_listbox.pack(fill="both", expand=True)
-        scrollbar.config(command=self.task_listbox.yview)
+        # Configure alternating row colors and styling
+        self.task_tree.tag_configure("oddrow", background="#F5F5F5")
+        self.task_tree.tag_configure("evenrow", background="white")
+        self.task_tree.tag_configure("completed", foreground="green")
+        self.task_tree.tag_configure("pending", foreground="black")
+        
+        # Configure style for better readability
+        style = ttk.Style()
+        style.configure("Treeview", font=("Arial", 10))
+        style.configure("Treeview.Heading", font=("Arial", 10, "bold"))
         
         # Task control buttons frame
         control_frame = Frame(task_frame)
@@ -145,7 +173,7 @@ class BasePlannerPage(Frame):
         if career_filter == "All Careers":
             self.filtered_tasks = date_filtered
         else:
-            self.filtered_tasks = [t for t in date_filtered if career_filter in t["description"]]
+            self.filtered_tasks = [t for t in date_filtered if career_filter in t["career"]]
         
         # Update the task list display
         self.update_task_list()
@@ -173,9 +201,33 @@ class BasePlannerPage(Frame):
                     if len(parts) < 4:
                         continue
                         
+                    # Parse the task description to extract career, title, and description
+                    description = parts[1]
+                    career = ""
+                    title = ""
+                    task_desc = ""
+                    
+                    # Try to parse the description format: "career - title: description"
+                    if " - " in description and ": " in description:
+                        career_part, rest = description.split(" - ", 1)
+                        career = career_part.strip()
+                        
+                        if ": " in rest:
+                            title_part, desc_part = rest.split(": ", 1)
+                            title = title_part.strip()
+                            task_desc = desc_part.strip()
+                        else:
+                            title = rest.strip()
+                            task_desc = ""
+                    else:
+                        # If parsing fails, use the entire description as task description
+                        task_desc = description
+                    
                     # Simplified format: TASK|career_detail|date|status
                     self.tasks.append({
-                        "description": parts[1],
+                        "career": career,
+                        "title": title,
+                        "description": task_desc,
                         "date": parts[2],
                         "status": parts[3]  # "pending" or "completed"
                     })
@@ -220,62 +272,83 @@ class BasePlannerPage(Frame):
             
             # Write all tasks with simplified format
             for task in self.tasks:
-                f.write(f"TASK|{task['description']}|{task['date']}|{task['status']}\n")
+                # Reconstruct the original description format
+                if task["title"]:
+                    description = f"{task['career']} - {task['title']}: {task['description']}"
+                else:
+                    description = task['description']
+                
+                f.write(f"TASK|{description}|{task['date']}|{task['status']}\n")
     
     def update_task_list(self):
-        """Refresh the task listbox with filtered and sorted tasks."""
-        self.task_listbox.delete(0, END)
+        """Refresh the task table with filtered and sorted tasks."""
+        # Clear existing items
+        for item in self.task_tree.get_children():
+            self.task_tree.delete(item)
         
         if not self.filtered_tasks:
-            self.task_listbox.insert(END, "No tasks found")
+            # Add a placeholder row when no tasks are found
+            self.task_tree.insert("", "end", values=("No tasks found", "", "", "", ""), tags=("oddrow",))
             return
         
         # Sort tasks by date
         sorted_tasks = sorted(self.filtered_tasks, key=lambda t: t["date"])
         
-        # Display tasks with status indicator
-        for task in sorted_tasks:
+        # Add tasks to the table
+        for i, task in enumerate(sorted_tasks):
             status = "✓" if task["status"] == "completed" else "○"
-            display_text = f"{status} [{task['date']}] {task['description']}"
-            self.task_listbox.insert(END, display_text)
+            tags = ("evenrow" if i % 2 == 0 else "oddrow",)
+            if task["status"] == "completed":
+                tags = tags + ("completed",)
+            else:
+                tags = tags + ("pending",)
+            
+            self.task_tree.insert(
+                "", 
+                "end", 
+                values=(status, task["date"], task["career"], task["title"], task["description"]),
+                tags=tags
+            )
     
-    def _get_selected_task_from_listbox(self):
-        """Helper to get the full task dictionary from the current listbox selection."""
-        selection_indices = self.task_listbox.curselection()
-        if not selection_indices:
+    def _get_selected_task_from_tree(self):
+        """Helper to get the full task dictionary from the current tree selection."""
+        selected_items = self.task_tree.selection()
+        if not selected_items:
             return None
             
-        selected_index = selection_indices[0]
-        selected_text = self.task_listbox.get(selected_index)
+        selected_item = selected_items[0]
+        values = self.task_tree.item(selected_item, "values")
         
         # Skip if it's the "No tasks found" message
-        if selected_text == "No tasks found":
+        if values[0] == "No tasks found":
             return None
         
         try:
-            # Parse the selected text to extract date and description
-            # Example: "✓ [2023-10-27] Full-Stack Developer - Build a simple REST API"
-            parts = selected_text.split('] ', 1)
-            
-            # Extract date from the first part, e.g., "✓ [2023-10-27"
-            task_date_str = parts[0].split('[')[1].strip()
-            task_description = parts[1].strip()
+            # Extract values from the selected row
+            status = values[0]
+            task_date_str = values[1]
+            career = values[2]
+            title = values[3]
+            description = values[4]
 
-            # Find the task in our main list using the parsed date and description
+            # Find the task in our main list using the parsed values
             for task in self.tasks:
-                if task["date"] == task_date_str and task["description"] == task_description:
+                if (task["date"] == task_date_str and 
+                    task["career"] == career and 
+                    task["title"] == title and 
+                    task["description"] == description):
                     return task
         except (IndexError, KeyError):
             # This can happen if the display format is unexpected
-            print(f"DEBUG: Parsing failed for text: {selected_text}") # Debug print
-            messagebox.showerror("Error", f"Could not parse the selected task.\nText: {selected_text}")
+            print(f"DEBUG: Parsing failed for values: {values}") # Debug print
+            messagebox.showerror("Error", f"Could not parse the selected task.\nValues: {values}")
             return None
             
         return None
 
     def mark_complete(self):
         """Toggle the 'completed' status of the selected task."""
-        task = self._get_selected_task_from_listbox()
+        task = self._get_selected_task_from_tree()
         if not task:
             messagebox.showwarning("Selection Error", "Please select a task to mark as complete.")
             return
@@ -287,13 +360,13 @@ class BasePlannerPage(Frame):
     
     def delete_task(self):
         """Delete the selected task after confirmation."""
-        task = self._get_selected_task_from_listbox()
+        task = self._get_selected_task_from_tree()
         if not task:
             messagebox.showwarning("Selection Error", "Please select a task to delete.")
             return
             
         # Confirm deletion with user
-        if messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete this task?\n\n'{task['description']}'"):
+        if messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete this task?\n\n'{task['title']}: {task['description']}'"):
             self.tasks.remove(task)
             self.save_tasks()
             self.apply_filters(self.current_date_filter, self.current_career_filter)
