@@ -19,9 +19,9 @@ class BasePlannerPage(Frame):
         self.current_career_filter = "All Careers"  # Current career filter state
         
         # Create the top frame with title and back button
-        top = Frame(self,bg="#FFFDFA")
+        top = Frame(self,bg="#2289E9")
         top.pack(fill="x", pady=8, padx=10)
-        Label(top, text="Daily Task Planner", font=("Arial", 20, "bold"),bg="#FFFDFA").pack(side="left", padx=12)
+        Label(top, text="Daily Task Planner", font=("Arial", 20, "bold"),bg="#2289E9").pack(side="left", padx=12)
         Button(top, text="Back", command=lambda: self.pages.show_frame("HomePage"), bg="red", height=1, width=10).pack(side="right", padx=12)
 
         # Main container for all UI elements
@@ -29,20 +29,20 @@ class BasePlannerPage(Frame):
         main_container.pack(fill="both", expand=True, padx=10, pady=5)
         
         # Task list frame - now takes full width
-        task_frame = Frame(main_container, bd=1, relief="raised")
+        task_frame = Frame(main_container, bd=1, relief="raised",bg="#DDE6F3")
         task_frame.pack(side="right", fill="both", expand=True)
         
         # Title for the task list
-        Label(task_frame, text="Task List", font=("Arial", 16, "bold")).pack(pady=10)
+        Label(task_frame, text="Task List", font=("Arial", 16, "bold"),bg="#DDE6F3",fg="#1100FC").pack(pady=10)
         
         # Filter buttons frame
-        filter_frame = Frame(task_frame)
+        filter_frame = Frame(task_frame,bg="#DDE6F3")
         filter_frame.pack(pady=10)
         
-        Label(filter_frame, text="Filter by Date:").pack()
+        Label(filter_frame, text="Filter by Date:",bg="#DDE6F3",fg="#1100FC").pack()
         
         # Date filter buttons
-        date_button_frame = Frame(filter_frame)
+        date_button_frame = Frame(filter_frame,bg="#DDE6F3")
         date_button_frame.pack(pady=5)
         
         Button(date_button_frame, text="All", command=lambda: self.apply_filters("all", self.current_career_filter), width=10).pack(side="left", padx=2)
@@ -51,10 +51,10 @@ class BasePlannerPage(Frame):
         Button(date_button_frame, text="This Week", command=lambda: self.apply_filters("week", self.current_career_filter), width=10).pack(side="left", padx=2)
         
         # Career filter frame
-        career_frame = Frame(task_frame)
+        career_frame = Frame(task_frame,bg="#DDE6F3")
         career_frame.pack(pady=10)
         
-        Label(career_frame, text="Filter by Career:").pack()
+        Label(career_frame, text="Filter by Career:",bg="#DDE6F3",fg="#1100FC").pack()
         
         # Career filter dropdown menu
         self.career_filter_var = StringVar()
@@ -63,10 +63,10 @@ class BasePlannerPage(Frame):
         self.career_filter_menu.pack(pady=5)
         
         # Task statistics frame
-        stats_frame = Frame(task_frame)
+        stats_frame = Frame(task_frame,bg="#DDE6F3")
         stats_frame.pack(pady=10)
         
-        self.stats_label = Label(stats_frame, text="", font=("Arial", 10))
+        self.stats_label = Label(stats_frame, text="", font=("Arial", 10),bg="#DDE6F3",fg="#1100FC")
         self.stats_label.pack()
         
         # Task table frame with scrollbar

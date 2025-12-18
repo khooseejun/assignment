@@ -1,9 +1,4 @@
 from tkinter import *
-from tkinter import messagebox
-from pathlib import Path
-import os
-from datetime import date, timedelta, datetime
-
 from A_Goal_Tracker import *
 from B_Skills_Log import *
 from C_Daily_Task_Planner import *
@@ -21,13 +16,14 @@ class MainMenu(Tk):
         super().__init__()
         self.title("Main menu")
         self.geometry("900x600")
+        # self.resizable(False, False)
         container = Frame(self)
         container.pack(fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in (HomePage, GoalPage, PlannerPage, SkillsLogPage,AchievementPage):
+        for F in (HomePage, GoalPage, PlannerPage, SkillsLogPage,AchievementPage, QAPage):
             page_name = F.__name__
             # pass self as "pages" (previously passed as controller)
             frame = F(parent=container, pages=self)
@@ -35,7 +31,7 @@ class MainMenu(Tk):
             frame.grid(row=0, column=0, sticky="nsew")
         self.show_frame("HomePage")
 
-        # Initialize tasks.txt file if it doesn't exist
+            # Initialize tasks.txt file if it doesn't exist
         self.initialize_tasks_file()
 
     def initialize_tasks_file(self):
@@ -57,6 +53,7 @@ class MainMenu(Tk):
                 frame.on_show()
             except Exception:
                 pass
+
 
 class HomePage(BasePage):
     def __init__(self, parent, pages):
@@ -81,10 +78,10 @@ class HomePage(BasePage):
 
         buttons_frame = Frame(body, bg="#4B6CB7", relief="flat")
         buttons_frame.pack(padx=8)
-        btn_opts = {"width": 40, "height": 2, "bd": 3, "relief": "raised","activebackground": "#1F3A73"}
+        btn_opts = {"font" :"Arial, 10","width": 40, "height": 2, "bd": 3, "relief": "raised","activebackground": "#1F3A73"}
         Button(buttons_frame, text="Goal Tracker", command=lambda: self.pages.show_frame("GoalPage"), **btn_opts).pack(pady=17)
-        Button(buttons_frame, text="Daily Task Planner", command=lambda: self.pages.show_frame("PlannerPage"), **btn_opts).pack(pady=17)
         Button(buttons_frame, text="Skills Log", command=lambda: self.pages.show_frame("SkillsLogPage"), **btn_opts).pack(pady=17)
+        Button(buttons_frame, text="Daily Task Planner", command=lambda: self.pages.show_frame("PlannerPage"), **btn_opts).pack(pady=17)
         Button(buttons_frame, text="Achievement Summary & Interview Tips", command=lambda: self.pages.show_frame("AchievementPage"), **btn_opts).pack(pady=17)
         Button(buttons_frame, text="Exit", command=self.pages.quit, **btn_opts,bg="#00c9fc").pack(pady=17)
 
@@ -121,10 +118,11 @@ class AchievementPage(BaseAchievementPage):
     def __init__(self, parent, pages):
         super().__init__(parent, pages)
 
+        
+class QAPage(BaseQAPage):
+    def __init__(self, parent, pages):
+        super().__init__(parent, pages)
 
-# class QAPage(BaseQAPage):
-#     def __init__(self, parent, pages):
-#         super().__init__(parent, pages)
 
 if __name__ == "__main__":
     MainMenu().mainloop()

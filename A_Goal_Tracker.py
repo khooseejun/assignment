@@ -1,19 +1,15 @@
+# A_Goal_Tracker.py
 from tkinter import *
 from tkinter import messagebox
 from datetime import date, timedelta, datetime
 
 class BaseGoalPage(Frame):
-    """
-    A class for creating a goal tracking page in a tkinter application.
-    Allows users to define career goals and generates a 14-day task plan.
-    """
     def __init__(self, parent, pages):
         super().__init__(parent)
-        self.pages = pages  # Reference to the page manager for navigation
-        self.career_choices = []  # List to store user's career choices
+        self.pages = pages 
+        self.career_choices = []
         
         # Define career tasks dictionary at class level - extended to 14 days
-        # Each career has 14 daily tasks with specific focus areas
         self.career_task = {
             "Full-Stack Developer": {
                 1: {"Front-End Focus": "Work on a single HTML/CSS component (e.g., a navbar, a card). Make it pixel-perfect and responsive."},
@@ -134,44 +130,42 @@ class BaseGoalPage(Frame):
         # Load existing career choices when initializing
         self.load_career_choices()
         
-        # Create the top frame with title and back button
         top = Frame(self, bg="#CFE8FF")
         top.pack(fill="x", pady=8, padx=10)
         Label(top, text="Goal Tracker", font=("Arial", 20, "bold"),bg="#CFE8FF").pack(side="left", padx=12)
         Button(top, text="Back", command=lambda: self.pages.show_frame("HomePage"), bg="red", fg="white",height=1, width=10).pack(side="right", padx=12)
 
-        # Main body frame for the goal tracker interface
         goals_body = Frame(self, bd=1, relief="raised")
         goals_body.pack(fill="both", expand=True, padx=15, pady=5)
         goals_body.pack_propagate(False)
 
         # ----------- New UI -------------
-        # Welcome text frame
         weltext = Frame(goals_body, bd=2, relief="raised", bg="#85C2FA")
         weltext.pack(fill="x")
         Label(weltext, text="Enter Your Own Career & Goals", font=("Arial", 20, "bold"), bg="#85C2FA").pack(padx=10)
 
-        # Career input frame
-        textentrybody = Frame(goals_body)
+        # Career input
+        textentrybody = Frame(goals_body,bg="#CFE8FF")
         textentrybody.pack(fill=X)
-        Label(textentrybody, text="Career Name:", font=("Arial", 12, "bold")).pack(side=LEFT,padx=10, pady=15)
+        Label(textentrybody, text="Career Name:", font=("Arial", 12, "bold"),fg="blue",bg="#CFE8FF").pack(side=LEFT,padx=10, pady=15)
         self.career_entry = Entry(textentrybody, font=("Arial", 12), width=60)
         self.career_entry.pack(padx=5,side=LEFT)
 
-        # Short-term goal input frame 
-        short_tbody = Frame(goals_body)
+        # Short-term input 
+        short_tbody = Frame(goals_body,bg="#CFE8FF")
         short_tbody.pack(fill=X)
-        Label(short_tbody, text="Short-term Goal:", font=("Arial", 12, "bold")).pack(side=LEFT,padx=10, pady=15)
+        Label(short_tbody, text="Short-term Goal:", font=("Arial", 12, "bold"),bg="#CFE8FF",fg="blue").pack(side=LEFT,padx=10, pady=15)
         self.short_term_entry = Text(short_tbody, height=3, width=80, font=("Arial", 12))
         self.short_term_entry.pack(padx=10, pady=5,side=LEFT)
         
-        # Short-term duration input frame (months) - Changed to Spinbox
-        time_short_frame = Frame(goals_body)
+
+        # Short-term time input (months) - Changed to Spinbox
+        time_short_frame = Frame(goals_body,bg="#CFE8FF")
         time_short_frame.pack(fill=X)
-        Label(time_short_frame, text="Duration (Months):", font=("Arial", 12, "bold")).pack(side=LEFT, padx=10)
+        Label(time_short_frame, text="Duration (Months):", font=("Arial", 12, "bold"),bg="#CFE8FF").pack(side=LEFT, padx=10)
         
         # Create a frame for the spinbox and label
-        month_spinbox_frame = Frame(time_short_frame)
+        month_spinbox_frame = Frame(time_short_frame,bg="#CFE8FF")
         month_spinbox_frame.pack(side=LEFT, padx=5)
         
         # Initialize month variable for Spinbox
@@ -187,22 +181,22 @@ class BaseGoalPage(Frame):
         )
         self.short_time_entry.pack(side=LEFT)
         
-        Label(month_spinbox_frame, text="months", font=("Arial", 10)).pack(side=LEFT, padx=5)
+        Label(month_spinbox_frame, text="months", font=("Arial", 10),bg="#CFE8FF").pack(side=LEFT, padx=5)
 
-        # Long-term goal input frame
-        long_tbody = Frame(goals_body)
+        # Long-term input 
+        long_tbody = Frame(goals_body,bg="#CFE8FF")
         long_tbody.pack(fill=X)
-        Label(long_tbody, text="Long-term Goal:", font=("Arial", 12, "bold")).pack(side=LEFT,padx=10, pady=15)
+        Label(long_tbody, text="Long-term Goal:", font=("Arial", 12, "bold"),bg="#CFE8FF",fg="blue").pack(side=LEFT,padx=10, pady=15)
         self.long_term_entry = Text(long_tbody, height=3, width=80, font=("Arial", 12))
         self.long_term_entry.pack(side=LEFT,padx=10, pady=5)
 
-        # Long-term duration input frame (years) - Changed to Spinbox
-        time_long_frame = Frame(goals_body)
+        # Long-term time input (years) - Changed to Spinbox
+        time_long_frame = Frame(goals_body,bg="#CFE8FF")
         time_long_frame.pack(fill=X)
-        Label(time_long_frame, text="Duration (Years):", font=("Arial", 12, "bold")).pack(side=LEFT, padx=10)
+        Label(time_long_frame, text="Duration (Years):", font=("Arial", 12, "bold"),bg="#CFE8FF").pack(side=LEFT, padx=10)
         
         # Create a frame for the spinbox and label
-        year_spinbox_frame = Frame(time_long_frame)
+        year_spinbox_frame = Frame(time_long_frame,bg="#CFE8FF")
         year_spinbox_frame.pack(side=LEFT, padx=5)
         
         # Initialize year variable for Spinbox
@@ -218,17 +212,17 @@ class BaseGoalPage(Frame):
         )
         self.long_time_entry.pack(side=LEFT)
         
-        Label(year_spinbox_frame, text="years", font=("Arial", 10)).pack(side=LEFT, padx=5)
+        Label(year_spinbox_frame, text="years", font=("Arial", 10),bg="#CFE8FF").pack(side=LEFT, padx=5)
 
-        # Textbox to display career names
+        #Textbox - Modified to show career names
         textframe = Frame(goals_body)
         textframe.pack(fill=BOTH,padx=2,pady=10)
-        Label(textframe,text="Your Careers:",font=("Arial", 12, "bold")).pack(side=TOP,padx=10)
+        Label(textframe,text="Your Careers Target:",font=("Arial", 12, "bold"),fg="blue").pack(side=TOP,padx=10)
         self.textbox =  Text(textframe,width=100, height=9, font=("Arial", 11))
         self.textbox.pack(pady=2)
         self.textbox.config(state=DISABLED)
 
-        # Submit button to save career goals
+        # Submit button
         submit = Button(goals_body, text="Submit", bg="blue", fg="white", width=30, height=2, command=self.submit_career)
         submit.pack(side=BOTTOM, pady=10)
         
@@ -236,7 +230,7 @@ class BaseGoalPage(Frame):
         self.update_career_display()
     
     def on_show(self):
-        """Called when the page is shown to refresh the career display"""
+        """Called when the page is shown"""
         self.load_career_choices()
         self.update_career_display()
     
@@ -263,10 +257,12 @@ class BaseGoalPage(Frame):
             self.textbox.insert(END, "No careers added yet.\n\nAdd your first career using the form above.")
         
         self.textbox.config(state=DISABLED)
+#Nicholas
+#you draw flowchart and stepwise until here
 
+
+#C.py(See Ze part fucntion)
     def submit_career(self):
-        """Handle the submission of a new career goal"""
-        # Get user input
         career = self.career_entry.get().strip()
         short_term = self.short_term_entry.get("1.0", END).strip()
         long_term = self.long_term_entry.get("1.0", END).strip()
@@ -275,22 +271,19 @@ class BaseGoalPage(Frame):
         months = self.month_var.get()
         years = self.year_var.get()
 
-        # Validate input
         if not career or not short_term or not long_term:
             messagebox.showwarning("Incomplete", "Please fill in all fields.")
             return
 
-        # Check for duplicate career
         if career in self.career_choices:
             messagebox.showwarning("Duplicate", "You already created this career before.")
             return
 
-        # Confirm with user before saving
         if messagebox.askokcancel("Confirm", f"Add career '{career}'?\n\nDuration: {months} month(s), {years} year(s)"):
-            # Save career with simplified format
+            # save career with simplified format
             self.save_career_choice(career)
 
-            # Save user-defined goals with new format
+            # save user-defined goals with new format
             with open("tasks.txt", "a") as f:
                 f.write(f"SHORTTERM:{career}|{short_term}|{months}\n")
                 f.write(f"LONGTERM:{career}|{long_term}|{years}\n")
@@ -361,7 +354,6 @@ class BaseGoalPage(Frame):
                     f.write(task_line)
     
     def load_career_choices(self):
-        """Load career choices from the tasks.txt file"""
         try:
             with open("tasks.txt", "r") as f:
                 content = f.read()
@@ -377,7 +369,6 @@ class BaseGoalPage(Frame):
             self.career_choices = []
     
     def save_career_choice(self, career):
-        """Save a career choice to the tasks.txt file"""
         try:
             with open("tasks.txt", "a") as f:
                 f.write(f"CAREER|{career}\n")
